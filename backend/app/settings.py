@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SQLITE_URL = f"sqlite:///{REPO_ROOT / 'backend' / 'ai_scientist.db'}"
-DEFAULT_CORS_ORIGINS = "http://localhost:5173"
+DEFAULT_CORS_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
 DEFAULT_LLM_MODEL = "gpt-4o-mini"
 
 
@@ -20,6 +20,8 @@ class Settings(BaseSettings):
 
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
     tavily_api_key: str = Field(default="", alias="TAVILY_API_KEY")
+    protocols_io_token: str = Field(default="", alias="PROTOCOLS_IO_TOKEN")
+    semantic_scholar_api_key: str = Field(default="", alias="SEMANTIC_SCHOLAR_API_KEY")
     database_url: str = Field(default=DEFAULT_SQLITE_URL, alias="DATABASE_URL")
     redis_url: str = Field(default="", alias="REDIS_URL")
 

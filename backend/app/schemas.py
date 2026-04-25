@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -16,12 +16,26 @@ class Reference(BaseModel):
     relevance: float | None = None
 
 
+class MatchedEntities(BaseModel):
+    """Concrete shape for novelty entity extraction.
+
+    OpenAI's strict structured-output mode rejects open-ended `dict[str, Any]`
+    fields (they map to `additionalProperties: true`), so we expose a fixed
+    set of fields the LLM is asked to fill. Empty string means "not determined".
+    """
+
+    intervention: str = ""
+    control: str = ""
+    endpoint: str = ""
+    model_or_system: str = ""
+
+
 class NoveltyResult(BaseModel):
     label: NoveltyLabel
     confidence: float = 0.0
     rationale: str = ""
     references: list[Reference] = Field(default_factory=list)
-    matched_entities: dict[str, Any] = Field(default_factory=dict)
+    matched_entities: MatchedEntities = Field(default_factory=MatchedEntities)
 
 
 class ProtocolStep(BaseModel):

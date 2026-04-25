@@ -9,12 +9,19 @@ export interface Reference {
   relevance?: number | null;
 }
 
+export interface MatchedEntities {
+  intervention: string;
+  control: string;
+  endpoint: string;
+  model_or_system: string;
+}
+
 export interface NoveltyResult {
   label: NoveltyLabel;
   confidence: number;
   rationale: string;
   references: Reference[];
-  matched_entities: Record<string, unknown>;
+  matched_entities: MatchedEntities;
 }
 
 export interface ProtocolStep {

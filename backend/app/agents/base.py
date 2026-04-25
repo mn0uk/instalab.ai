@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable
 
 from ..providers.llm import LLMProvider
 from ..providers.tavily import SearchHit, TavilyProvider
+
+
+AgentEventCallback = Callable[[str, str, dict[str, Any]], None]
 
 
 @dataclass
@@ -14,6 +17,7 @@ class AgentContext:
     domain: str | None = None
     prior_outputs: dict[str, Any] = field(default_factory=dict)
     feedback_examples: list[dict[str, Any]] = field(default_factory=list)
+    event_callback: AgentEventCallback | None = None
 
 
 class Agent:
