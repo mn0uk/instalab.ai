@@ -1,7 +1,142 @@
+# =========================
+# Secrets / env files
+# =========================
 .env
-frontend/.env
-backend/.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# =========================
+# OS / editor
+# =========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =========================
+# Python (backend)
+# =========================
 __pycache__/
-*.pyc
-node_modules/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+**/.venv/
+**/venv/
+
+# Packaging / builds
+build/
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Test / coverage / type-checker caches
+.cache/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+
+# Jupyter / IPython
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# Local SQLite databases (keep migrations, drop runtime data)
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# =========================
+# Node / Vite / TypeScript (frontend)
+# =========================
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+.yarn/cache
+.yarn/install-state.gz
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
+.vite/
+
+# TS incremental build info
+*.tsbuildinfo
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Tooling caches
+.eslintcache
+.stylelintcache
+.parcel-cache/
+.turbo/
+.next/
+.nuxt/
+.svelte-kit/
+
+# =========================
+# Misc
+# =========================
+*.local
+*.pid
+*.seed
+*.pid.lock
+.tmp/
+tmp/
