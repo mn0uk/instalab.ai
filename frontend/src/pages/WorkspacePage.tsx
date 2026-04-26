@@ -436,6 +436,17 @@ function VerificationGraph({
 }
 
 function PaperRow({ p, contradicting }: { p: LiteraturePaperRow; contradicting?: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  const summaryRef = useRef<HTMLParagraphElement | null>(null);
+  const [isClamped, setIsClamped] = useState(false);
+
+  useEffect(() => {
+    if (!p.summary || expanded) return;
+    const el = summaryRef.current;
+    if (!el) return;
+    setIsClamped(el.scrollHeight - el.clientHeight > 1);
+  }, [p.summary, expanded]);
+
   return (
     <div
       className="border-b py-2.5"
@@ -468,7 +479,25 @@ function PaperRow({ p, contradicting }: { p: LiteraturePaperRow; contradicting?:
             </div>
           )}
           {p.summary && (
-            <p className="mt-1.5 text-[10px] leading-snug text-fu-t2">{p.summary}</p>
+            <>
+              <p
+                ref={summaryRef}
+                className={`mt-1.5 text-[10px] leading-snug text-fu-t2 ${
+                  expanded ? "" : "line-clamp-2"
+                }`}
+              >
+                {p.summary}
+              </p>
+              {(isClamped || expanded) && (
+                <button
+                  type="button"
+                  onClick={() => setExpanded((v) => !v)}
+                  className="mt-1 font-mono text-[9px] font-bold uppercase tracking-wider text-fu-t4 hover:text-fu-text"
+                >
+                  {expanded ? "Show less" : "Show more"}
+                </button>
+              )}
+            </>
           )}
         </div>
         <span
