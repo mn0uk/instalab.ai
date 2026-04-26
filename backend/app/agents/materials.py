@@ -5,7 +5,7 @@ from typing import Any
 from langchain_core.tools import BaseTool
 
 from ..schemas import MaterialsResult
-from .base import AgentContext, safe_json
+from .base import AgentContext, regeneration_instructions_block, safe_json
 from .langgraph_base import BaseLangGraphAgent
 from .tools import make_materials_tools
 
@@ -76,6 +76,7 @@ class MaterialsAgent(BaseLangGraphAgent):
             f"Protocol JSON:\n{safe_json(protocol)}\n\n"
             "Build the materials list now. Use the tools, then return the final "
             "structured result."
+            + regeneration_instructions_block(ctx)
         )
 
     def fallback_run(self, ctx: AgentContext) -> dict[str, Any]:

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import uuid
-from typing import List
+from typing import Any, List
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -13,8 +13,11 @@ from ..schemas import (
     AgentRunSummary,
     ExperimentCreateRequest,
     ExperimentDetailResponse,
+    ExperimentPatchRequest,
     ExperimentPlanResponse,
     ExperimentSummary,
+    PlanPatchRequest,
+    RegenerateRequest,
     ReviewCreateRequest,
     ReviewResponse,
 )
@@ -80,15 +83,102 @@ def get_experiment(experiment_id: str, db: Session = Depends(get_db)) -> Experim
     )
 
 
-@router.post("/{experiment_id}/regenerate", response_model=ExperimentSummary)
-def regenerate_plan(
+def _deep_merge_plan_dict(base: dict[str, Any] | None, patch: dict[str, Any]) -> dict[str, Any]:
+    out: dict[str, Any] = dict(base or {})
+    for key, val in patch.items():
+        if isinstance(val, dict) and isinstance(out.get(key), dict):
+            out[key] = _deep_merge_plan_dict(out[key], val)  # type: ignore[arg-type]
+        else:
+            out[key] = val
+    return out
+
+
+def _compose_regenerate_context(
+    db: Session, experiment_id: str, payload: RegenerateRequest
+) -> str | None:
+    parts: list[str] = []
+    if payload.notes and payload.notes.strip():
+        parts.append(payload.notes.strip())
+    if payload.include_review_corrections:
+        rows = (
+            db.query(ReviewFeedback)
+            .filter(ReviewFeedback.experiment_id == experiment_id)
+            .order_by(ReviewFeedback.created_at.desc())
+            .limit(25)
+            .all()
+        )
+        for r in rows:
+            if r.correction and r.correction.strip():
+                parts.append(f"[{r.section}] (rating {r.rating}/5): {r.correction.strip()}")
+    return "\n\n".join(parts) if parts else None
+
+
+@router.patch("/{experiment_id}", response_model=ExperimentSummary)
+def patch_experiment(
     experiment_id: str,
-    background_tasks: BackgroundTasks,
+    payload: ExperimentPatchRequest,
     db: Session = Depends(get_db),
 ) -> ExperimentSummary:
     experiment = db.get(Experiment, experiment_id)
     if experiment is None:
         raise HTTPException(status_code=404, detail="Experiment not found")
+    data = payload.model_dump(exclude_unset=True)
+    if "hypothesis" in data and data["hypothesis"] is not None:
+        experiment.hypothesis = data["hypothesis"].strip()
+    if "domain" in data:
+        experiment.domain = data["domain"]
+    db.commit()
+    db.refresh(experiment)
+    return _to_summary(experiment)
+
+
+@router.patch("/{experiment_id}/latest-plan", response_model=ExperimentPlanResponse)
+def patch_latest_plan(
+    experiment_id: str,
+    payload: PlanPatchRequest,
+    db: Session = Depends(get_db),
+) -> ExperimentPlanResponse:
+    experiment = db.get(Experiment, experiment_id)
+    if experiment is None:
+        raise HTTPException(status_code=404, detail="Experiment not found")
+    latest_plan = (
+        db.query(ExperimentPlan)
+        .filter(ExperimentPlan.experiment_id == experiment_id)
+        .order_by(ExperimentPlan.version.desc())
+        .first()
+    )
+    if latest_plan is None:
+        raise HTTPException(status_code=404, detail="No experiment plan yet")
+    patch = payload.model_dump(exclude_unset=True, exclude_none=True)
+    for key in ("novelty", "protocol", "materials", "timeline", "validation", "synthesis"):
+        if key not in patch:
+            continue
+        current = getattr(latest_plan, key)
+        if not isinstance(patch[key], dict):
+            setattr(latest_plan, key, patch[key])
+        else:
+            merged = _deep_merge_plan_dict(
+                current if isinstance(current, dict) else None,
+                patch[key],
+            )
+            setattr(latest_plan, key, merged)
+    db.commit()
+    db.refresh(latest_plan)
+    return _to_plan_response(latest_plan)
+
+
+@router.post("/{experiment_id}/regenerate", response_model=ExperimentSummary)
+def regenerate_plan(
+    experiment_id: str,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    payload: RegenerateRequest = Body(default_factory=RegenerateRequest),
+) -> ExperimentSummary:
+    experiment = db.get(Experiment, experiment_id)
+    if experiment is None:
+        raise HTTPException(status_code=404, detail="Experiment not found")
+    ctx_text = _compose_regenerate_context(db, experiment_id, payload)
+    experiment.regenerate_context = ctx_text
     experiment.status = "QUEUED"
     experiment.error = None
     db.commit()

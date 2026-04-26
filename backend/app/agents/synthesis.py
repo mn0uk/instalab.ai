@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..schemas import SynthesisResult
-from .base import AgentContext, safe_json
+from .base import AgentContext, regeneration_instructions_block, safe_json
 from .structured_base import BaseStructuredLLMAgent
 
 
@@ -46,6 +46,7 @@ class SynthesisAgent(BaseStructuredLLMAgent):
             f"Domain: {ctx.domain or 'unspecified'}\n\n"
             f"Section outputs:\n{safe_json(bundle)}\n\n"
             "Synthesize the bundle now and return the structured result."
+            + regeneration_instructions_block(ctx)
         )
 
     def fallback_run(self, ctx: AgentContext) -> dict[str, Any]:

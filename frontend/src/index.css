@@ -4,6 +4,18 @@
 
 :root {
   color-scheme: light;
+  --fu-bg: #f0f0ec;
+  --fu-card: #ffffff;
+  --fu-border: #d8d8d4;
+  --fu-border-strong: #000000;
+  --fu-text: #000000;
+  --fu-t2: #252525;
+  --fu-t3: #4e4e4a;
+  --fu-t4: #767672;
+  --fu-red: #ff2319;
+  --fu-green: #00b341;
+  --fu-amber: #ff8800;
+  --fu-dot: rgba(0, 0, 0, 0.07);
 }
 
 html,
@@ -11,3 +23,212 @@ body,
 #root {
   height: 100%;
 }
+
+@layer base {
+  body {
+    background-color: var(--fu-bg);
+    color: var(--fu-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .font-mono-fu {
+    font-family: "Space Mono", ui-monospace, monospace;
+  }
+  .fu-dot-grid {
+    background-image: radial-gradient(circle, var(--fu-dot) 1px, transparent 1px);
+    background-size: 10px 10px;
+  }
+}
+
+/* FULCRUM component primitives (match new_ui_frontend/index.html) */
+@keyframes fu-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fu-animate {
+  animation: fu-fade-up 0.3s ease-out both;
+}
+.fu-animate-delay-1 {
+  animation-delay: 0.05s;
+}
+.fu-animate-delay-2 {
+  animation-delay: 0.1s;
+}
+.fu-animate-delay-3 {
+  animation-delay: 0.15s;
+}
+
+@keyframes fu-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.fu-spin {
+  animation: fu-spin 0.8s linear infinite;
+}
+
+@keyframes fu-pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+.fu-pulse {
+  animation: fu-pulse-dot 2s ease-in-out infinite;
+}
+
+.fu-card {
+  background: var(--fu-card);
+  border: 1px solid var(--fu-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.fu-nav-item {
+  @apply flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors cursor-pointer;
+  color: var(--fu-t3);
+  letter-spacing: 0.02em;
+}
+.fu-nav-item:hover {
+  background: #f5f5f1;
+  color: var(--fu-text);
+}
+.fu-nav-item.active {
+  background: #000;
+  color: #fff;
+}
+.fu-nav-item.active svg {
+  stroke: #fff !important;
+}
+.fu-nav-item svg {
+  stroke: var(--fu-t3);
+  transition: stroke 0.15s;
+}
+.fu-nav-item:hover svg {
+  stroke: var(--fu-text);
+}
+
+.fu-tab {
+  @apply rounded px-3 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors border-0 bg-transparent cursor-pointer;
+  color: var(--fu-t4);
+  font-family: "Space Grotesk", sans-serif;
+}
+.fu-tab:hover {
+  color: var(--fu-t3);
+}
+.fu-tab.active {
+  background: #000;
+  color: #fff;
+}
+
+.fu-action-bar {
+  border-top: 1px solid var(--fu-border);
+  @apply flex shrink-0 items-center justify-between bg-white px-8 py-3.5;
+}
+
+.fu-paper-row {
+  @apply rounded-lg p-2 transition-colors;
+}
+.fu-paper-row:hover {
+  background: #f5f5f1;
+}
+
+.fu-ex-card {
+  @apply cursor-pointer rounded-[10px] border bg-white p-4 transition-all;
+  border-color: var(--fu-border);
+}
+.fu-ex-card:hover {
+  border-color: #000;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+}
+
+.fu-tag-red {
+  background: rgba(255, 35, 25, 0.08);
+  color: var(--fu-red);
+  border: 1px solid rgba(255, 35, 25, 0.2);
+}
+.fu-tag-green {
+  background: rgba(0, 179, 65, 0.08);
+  color: var(--fu-green);
+  border: 1px solid rgba(0, 179, 65, 0.2);
+}
+.fu-tag-amber {
+  background: rgba(255, 136, 0, 0.08);
+  color: var(--fu-amber);
+  border: 1px solid rgba(255, 136, 0, 0.2);
+}
+
+.fu-seg-row {
+  @apply flex gap-0.5;
+}
+.fu-seg {
+  @apply h-[3px] flex-1 rounded-sm;
+}
+
+/* thin scrollbar */
+::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 2px;
+}
+
+/* Score pop-in animation */
+@keyframes fu-npop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.npop {
+  animation: fu-npop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Prototype fade-in stagger classes */
+.fu {
+  animation: fu-fade-up 0.3s ease-out both;
+}
+.fu1 {
+  animation: fu-fade-up 0.3s ease-out 0.05s both;
+}
+.fu2 {
+  animation: fu-fade-up 0.3s ease-out 0.1s both;
+}
+.fu3 {
+  animation: fu-fade-up 0.3s ease-out 0.15s both;
+}
+
+/* Overlay bouncing dots */
+@keyframes fu-bounce {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(-4px); opacity: 0.5; }
+}
+.fu-db1 { animation: fu-bounce 0.9s ease-in-out 0s infinite; }
+.fu-db2 { animation: fu-bounce 0.9s ease-in-out 0.15s infinite; }
+.fu-db3 { animation: fu-bounce 0.9s ease-in-out 0.3s infinite; }

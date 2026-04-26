@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..schemas import ValidationResult
-from .base import AgentContext, hits_to_block, safe_json
+from .base import AgentContext, hits_to_block, regeneration_instructions_block, safe_json
 from .structured_base import BaseStructuredLLMAgent
 
 
@@ -41,6 +41,7 @@ class ValidationAgent(BaseStructuredLLMAgent):
             f"Protocol JSON:\n{safe_json(protocol)}\n\n"
             f"Standards search results:\n{hits_to_block(standards_hits)}\n\n"
             "Define the validation approach now and return the structured result."
+            + regeneration_instructions_block(ctx)
         )
 
     def system_prompt(self, ctx: AgentContext) -> str:

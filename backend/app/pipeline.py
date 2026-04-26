@@ -30,7 +30,15 @@ def run_experiment_pipeline(experiment_id: str) -> None:
         experiment.error = None
         db.commit()
 
-        ctx = AgentContext(hypothesis=experiment.hypothesis, domain=experiment.domain)
+        regen_text = (experiment.regenerate_context or "").strip() or None
+        experiment.regenerate_context = None
+        db.commit()
+
+        ctx = AgentContext(
+            hypothesis=experiment.hypothesis,
+            domain=experiment.domain,
+            regeneration_notes=regen_text,
+        )
         orchestrator = Orchestrator()
 
         agent_run_index: dict[str, AgentRun] = {}

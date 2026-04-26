@@ -144,3 +144,22 @@ export interface ReviewResponse {
   reviewer?: string | null;
   created_at: string;
 }
+
+export interface ExperimentPatchRequest {
+  hypothesis?: string;
+  domain?: string | null;
+}
+
+export interface RegenerateRequest {
+  notes?: string | null;
+  include_review_corrections?: boolean;
+}
+
+export interface PlanPatchRequest {
+  novelty?: Record<string, unknown> | null;
+  protocol?: Record<string, unknown> | null;
+  materials?: Record<string, unknown> | null;
+  timeline?: Record<string, unknown> | null;
+  validation?: Record<string, unknown> | null;
+  synthesis?: Record<string, unknown> | null;
+}

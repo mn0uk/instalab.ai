@@ -109,6 +109,29 @@ class ExperimentCreateRequest(BaseModel):
     domain: str | None = None
 
 
+class ExperimentPatchRequest(BaseModel):
+    hypothesis: str | None = Field(default=None, min_length=10)
+    domain: str | None = None
+
+
+class RegenerateRequest(BaseModel):
+    """Optional context passed to the agent pipeline on regenerate."""
+
+    notes: str | None = None
+    include_review_corrections: bool = False
+
+
+class PlanPatchRequest(BaseModel):
+    """Partial update merged into the latest experiment plan JSON fields."""
+
+    novelty: dict | None = None
+    protocol: dict | None = None
+    materials: dict | None = None
+    timeline: dict | None = None
+    validation: dict | None = None
+    synthesis: dict | None = None
+
+
 class ExperimentSummary(BaseModel):
     id: str
     hypothesis: str

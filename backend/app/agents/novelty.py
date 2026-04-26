@@ -6,7 +6,7 @@ from typing import Any
 from langchain_core.tools import BaseTool
 
 from ..schemas import NoveltyResult
-from .base import AgentContext, hits_to_references
+from .base import AgentContext, hits_to_references, regeneration_instructions_block
 from .langgraph_base import BaseLangGraphAgent
 from .tools import make_novelty_tools
 
@@ -55,6 +55,9 @@ class NoveltyAgent(BaseLangGraphAgent):
             f"Hypothesis:\n{ctx.hypothesis}",
             f"Domain: {ctx.domain or 'unspecified'}",
         ]
+        regen = regeneration_instructions_block(ctx)
+        if regen.strip():
+            parts.append(regen.strip())
         if ctx.feedback_examples:
             compact = [
                 {

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..schemas import TimelineResult
-from .base import AgentContext, safe_json
+from .base import AgentContext, regeneration_instructions_block, safe_json
 from .structured_base import BaseStructuredLLMAgent
 
 
@@ -39,6 +39,7 @@ class TimelineAgent(BaseStructuredLLMAgent):
             f"Protocol JSON:\n{safe_json(protocol)}\n\n"
             f"Materials JSON:\n{safe_json(materials)}\n\n"
             "Build the timeline now and return the structured result."
+            + regeneration_instructions_block(ctx)
         )
 
     def fallback_run(self, ctx: AgentContext) -> dict[str, Any]:

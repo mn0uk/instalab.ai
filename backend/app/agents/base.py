@@ -17,7 +17,18 @@ class AgentContext:
     domain: str | None = None
     prior_outputs: dict[str, Any] = field(default_factory=dict)
     feedback_examples: list[dict[str, Any]] = field(default_factory=list)
+    """Free-text instructions from the user when re-running the pipeline."""
+    regeneration_notes: str | None = None
     event_callback: AgentEventCallback | None = None
+
+
+def regeneration_instructions_block(ctx: AgentContext) -> str:
+    if not ctx.regeneration_notes or not str(ctx.regeneration_notes).strip():
+        return ""
+    return (
+        "\n\nRegeneration / correction instructions (apply where relevant):\n"
+        + str(ctx.regeneration_notes).strip()
+    )
 
 
 class Agent:

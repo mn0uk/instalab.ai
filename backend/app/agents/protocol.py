@@ -8,7 +8,7 @@ from ..providers.protocols_io import ProtocolsIoProvider
 from ..providers.llm import LLMProvider
 from ..providers.tavily import TavilyProvider
 from ..schemas import ProtocolResult
-from .base import AgentContext, hits_to_references
+from .base import AgentContext, hits_to_references, regeneration_instructions_block
 from .langgraph_base import BaseLangGraphAgent
 from .tools import make_protocol_tools
 
@@ -64,6 +64,7 @@ class ProtocolAgent(BaseLangGraphAgent):
             f"Hypothesis:\n{ctx.hypothesis}\n\n"
             f"Domain: {ctx.domain or 'unspecified'}\n\n"
             "Build the protocol now. Use the tools, then return the final structured result."
+            + regeneration_instructions_block(ctx)
         )
 
     def fallback_run(self, ctx: AgentContext) -> dict[str, Any]:

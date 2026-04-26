@@ -7,10 +7,16 @@ const STYLES: Record<RunStatus, string> = {
   FAILED: "bg-red-100 text-red-800",
 };
 
-export default function StatusPill({ status }: { status: RunStatus }) {
+export default function StatusPill({
+  status,
+  className = "",
+}: {
+  status: RunStatus;
+  className?: string;
+}) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STYLES[status]}`}
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STYLES[status]} ${className}`}
     >
       {status}
     </span>

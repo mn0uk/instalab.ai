@@ -18,6 +18,7 @@ class Experiment(Base):
     domain: Mapped[str | None] = mapped_column(String(64), nullable=True)
     status: Mapped[str] = mapped_column(String(32), default="QUEUED", nullable=False)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    regenerate_context: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=_utcnow, onupdate=_utcnow, nullable=False

@@ -1,0 +1,5 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import SectionCard from "./SectionCard";
+export default function TimelineCard({ data }) {
+    return (_jsxs(SectionCard, { title: "Timeline", subtitle: `Critical path: ${data.critical_path_days} days`, children: [_jsx("ol", { className: "space-y-2", children: data.phases.map((p) => (_jsxs("li", { className: "border border-slate-200 rounded-md p-3", children: [_jsxs("div", { className: "flex items-center justify-between", children: [_jsx("p", { className: "text-sm font-medium", children: p.name }), _jsxs("span", { className: "text-xs text-slate-500", children: [p.duration_days, " days"] })] }), p.depends_on.length > 0 && (_jsxs("p", { className: "text-xs text-slate-500 mt-1", children: ["Depends on: ", p.depends_on.join(", ")] })), p.parallelizable && (_jsx("p", { className: "text-xs text-emerald-700 mt-1", children: "Parallelizable" })), p.notes && _jsx("p", { className: "text-xs text-slate-700 mt-1", children: p.notes })] }, p.name))) }), data.parallelization_notes && (_jsx("p", { className: "text-xs text-slate-600", children: data.parallelization_notes }))] }));
+}

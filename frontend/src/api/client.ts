@@ -1,6 +1,10 @@
 import type {
   ExperimentDetailResponse,
+  ExperimentPlanResponse,
   ExperimentSummary,
+  ExperimentPatchRequest,
+  PlanPatchRequest,
+  RegenerateRequest,
   ReviewCreateRequest,
   ReviewResponse,
 } from "./types";
@@ -37,8 +41,23 @@ export const api = {
 
   getExperiment: (id: string) => http<ExperimentDetailResponse>(`/experiments/${id}`),
 
-  regenerate: (id: string) =>
-    http<ExperimentSummary>(`/experiments/${id}/regenerate`, { method: "POST" }),
+  patchExperiment: (id: string, payload: ExperimentPatchRequest) =>
+    http<ExperimentSummary>(`/experiments/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
+  patchLatestPlan: (id: string, payload: PlanPatchRequest) =>
+    http<ExperimentPlanResponse>(`/experiments/${id}/latest-plan`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
+  regenerate: (id: string, payload?: RegenerateRequest) =>
+    http<ExperimentSummary>(`/experiments/${id}/regenerate`, {
+      method: "POST",
+      body: JSON.stringify(payload ?? {}),
+    }),
 
   createReview: (id: string, payload: ReviewCreateRequest) =>
     http<ReviewResponse>(`/experiments/${id}/reviews`, {

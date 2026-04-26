@@ -1,0 +1,49 @@
+export function WorkspaceTopBar() {
+  return (
+    <header
+      className="flex shrink-0 items-center justify-between gap-4 border-b bg-white px-6 py-3"
+      style={{ borderColor: "var(--fu-border)" }}
+    >
+      <div>
+        <div className="font-mono text-[12px] font-bold uppercase tracking-[.1em]">The AI Scientist</div>
+        <div className="text-[10px] italic text-fu-t4">
+          From hypothesis to runnable experiment plan
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <div
+          className="flex min-w-[180px] items-center gap-2 rounded-lg border px-3 py-1.5 text-[11px] text-fu-t3"
+          style={{ borderColor: "var(--fu-border)" }}
+        >
+          <svg
+            width="11"
+            height="11"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <span>Search experiments…</span>
+          <span className="ml-auto font-mono text-[10px] text-gray-300">⌘K</span>
+        </div>
+        <button
+          type="button"
+          className="relative flex h-8 w-8 items-center justify-center rounded-lg border bg-white text-fu-t3"
+          style={{ borderColor: "var(--fu-border)" }}
+          aria-label="Notifications"
+        >
+          <svg width="13" height="13" fill="none" strokeWidth="1.8" viewBox="0 0 24 24">
+            <path
+              stroke="currentColor"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+            />
+          </svg>
+          <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-fu-red ring-2 ring-white" />
+        </button>
+      </div>
+    </header>
+  );
+}
