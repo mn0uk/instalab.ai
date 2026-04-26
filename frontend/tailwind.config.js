@@ -14,7 +14,13 @@ export default {
           t4: "#767672",
           red: "#FF2319",
           green: "#00B341",
-          amber: "#FF8800",
+          // LabRun brand accent (gradient midpoint).
+          amber: "#3B36FC",
+        },
+        lr: {
+          "accent-from": "#214DFC",
+          "accent-to": "#561FFC",
+          accent: "#3B36FC",
         },
       },
       fontFamily: {

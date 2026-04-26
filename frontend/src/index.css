@@ -14,7 +14,13 @@
   --fu-t4: #767672;
   --fu-red: #ff2319;
   --fu-green: #00b341;
-  --fu-amber: #ff8800;
+  /* LabRun brand accent: blue (#214DFC) -> violet (#561FFC) gradient.
+     `--fu-amber` keeps its old name so existing class hooks still resolve,
+     but its value is now the gradient midpoint (vibrant indigo). */
+  --lr-accent-from: #214dfc;
+  --lr-accent-to: #561ffc;
+  --lr-accent-grad: linear-gradient(90deg, #214dfc 0%, #561ffc 100%);
+  --fu-amber: #3b36fc;
   --fu-dot: rgba(0, 0, 0, 0.07);
 }
 
@@ -200,9 +206,9 @@ body {
   border: 1px solid rgba(0, 179, 65, 0.2);
 }
 .fu-tag-amber {
-  background: rgba(255, 136, 0, 0.08);
+  background: rgba(59, 54, 252, 0.08);
   color: var(--fu-amber);
-  border: 1px solid rgba(255, 136, 0, 0.2);
+  border: 1px solid rgba(59, 54, 252, 0.2);
 }
 
 .fu-seg-row {

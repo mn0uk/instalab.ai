@@ -392,7 +392,7 @@ function VerificationGraph({
         </span>
         <span className="font-mono text-[9px] tracking-wide text-fu-t4">
           <span style={{ color: "var(--fu-green)" }}>green</span> = tested ·{" "}
-          <span style={{ color: "var(--fu-amber)" }}>amber</span> = assumed ·{" "}
+          <span style={{ color: "var(--fu-amber)" }}>indigo</span> = assumed ·{" "}
           <span style={{ color: "var(--fu-t4)" }}>grey</span> = out of scope
         </span>
       </div>
