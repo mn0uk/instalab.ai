@@ -80,12 +80,6 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 .edit-area{width:100%;border:none;background:transparent;font-family:'Space Grotesk',sans-serif;font-size:12px;color:var(--t2);line-height:1.6;resize:none;padding:0;}
 .edit-area:focus{outline:none;}
 
-/* AI rec card */
-.rec-card{border-radius:8px;padding:10px 12px;border:1px solid;transition:all .15s;cursor:default;}
-.rec-apply{cursor:pointer;transition:all .15s;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:4px;border:1.5px solid #000;background:transparent;font-family:'Space Grotesk',sans-serif;}
-.rec-apply:hover{background:#000;color:#fff;}
-.rec-apply.applied{background:var(--green);border-color:var(--green);color:#fff;pointer-events:none;}
-
 /* Fix btn */
 .fix-btn{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:4px;border:1.5px solid;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .15s;flex-shrink:0;}
 .fix-btn.critical{border-color:var(--red);color:var(--red);}
@@ -151,39 +145,34 @@ button{cursor:pointer;font-family:'Space Grotesk',sans-serif;}
   </div>
 
   <nav style="flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;">
+
+    <!-- PIPELINE NAV -->
+    <div class="mono" style="font-size:8px;color:var(--t4);letter-spacing:.12em;padding:4px 8px 6px;font-weight:700;text-transform:uppercase;">Pipeline</div>
     <div class="nav-item active" id="nav-workspace" onclick="navTo('input',1)">
-      <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      Workspace
+      <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+      Hypothesis
     </div>
     <div class="nav-item" id="nav-qc" onclick="navTo('qc',2)">
       <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      Literature Check
+      Literature Review
     </div>
-    <div class="nav-item" id="nav-experiments" onclick="navTo('plan',3,'prot','nav-experiments')">
-      <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2h-4M9 3a2 2 0 002 2h2a2 2 0 002-2M9 3a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      Preview
+    <div class="nav-item" id="nav-experiments" onclick="navTo('audit',3,'protocol','nav-experiments')">
+      <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+      Experiment Analysis
     </div>
-    <div class="nav-item" id="nav-protocols" onclick="navTo('audit',4,'protocol')">
-      <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M9 8h3M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
-      Protocols
+    <div class="nav-item" id="nav-reviews" onclick="navTo('review',4)">
+      <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Summary
     </div>
-    <div class="nav-item" id="nav-materials" onclick="navTo('audit',4,'materials')">
-      <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-      Materials
+
+    <!-- HISTORY -->
+    <div style="height:1px;background:var(--border);margin:10px 4px 6px;"></div>
+    <div class="mono" style="font-size:8px;color:var(--t4);letter-spacing:.12em;padding:4px 8px 6px;font-weight:700;text-transform:uppercase;">History</div>
+
+    <div id="nav-history-list" style="display:flex;flex-direction:column;gap:1px;">
+      <!-- history items injected by JS -->
     </div>
-    <div class="nav-item" id="nav-audit" onclick="navTo('audit',4,'materials')">
-      <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-      Planning
-    </div>
-    <div class="nav-item" id="nav-reviews" onclick="navTo('review',5)">
-      <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-      Reviews
-    </div>
-    <div style="height:1px;background:var(--border);margin:6px 4px;"></div>
-    <div class="nav-item" id="nav-settings" onclick="alert('Settings — coming soon.')">
-      <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
-      Settings
-    </div>
+
   </nav>
 
   <div style="padding:10px 8px;border-top:1px solid var(--border);">
@@ -312,8 +301,8 @@ button{cursor:pointer;font-family:'Space Grotesk',sans-serif;}
           <!-- Page header -->
           <div class="fu" style="margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;">
             <div>
-              <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:4px;">STEP 2 OF 5</div>
-              <div class="mono" style="font-size:22px;font-weight:700;letter-spacing:-.01em;">Literature Check</div>
+              <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:4px;">STEP 2 OF 4</div>
+              <div class="mono" style="font-size:22px;font-weight:700;letter-spacing:-.01em;">Literature Review</div>
               <p style="font-size:12px;color:var(--t3);margin-top:4px;">Checks prior work, closeness of paper titles, citation weight, and journal signal.</p>
             </div>
             <div style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:5px;" class="tag-red fu1">
@@ -339,7 +328,7 @@ button{cursor:pointer;font-family:'Space Grotesk',sans-serif;}
           </div>
 
           <!-- Main 2-col -->
-          <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:14px;">
+          <div style="display:grid;grid-template-columns:1fr;gap:14px;">
 
             <!-- Left: Score + Papers -->
             <div style="display:flex;flex-direction:column;gap:12px;">
@@ -351,7 +340,7 @@ button{cursor:pointer;font-family:'Space Grotesk',sans-serif;}
                 </div>
                 <div style="padding:16px;">
                   <div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:10px;">
-                    <div class="mono npop" style="font-size:52px;font-weight:700;letter-spacing:-.03em;line-height:1;">72</div>
+                    <div id="lit-novelty-score" class="mono npop" style="font-size:52px;font-weight:700;letter-spacing:-.03em;line-height:1;">72</div>
                     <div class="mono" style="font-size:22px;color:var(--t4);margin-bottom:6px;">%</div>
                     <div style="margin-left:8px;margin-bottom:10px;">
                       <div style="font-size:10px;color:var(--t3);line-height:1.4;">Output: similar work exists.<br>Score weights paper count, title closeness, citations, and journal impact.</div>
@@ -366,10 +355,6 @@ button{cursor:pointer;font-family:'Space Grotesk',sans-serif;}
                     <div style="padding:8px;border:1px solid var(--border);border-radius:6px;text-align:center;">
                       <div class="mono" style="font-size:16px;font-weight:700;color:var(--red);">3</div>
                       <div style="font-size:9px;color:var(--t4);margin-top:2px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;">High match</div>
-                    </div>
-                    <div style="padding:8px;border:1px solid var(--border);border-radius:6px;text-align:center;">
-                      <div class="mono" style="font-size:16px;font-weight:700;">2019</div>
-                      <div style="font-size:9px;color:var(--t4);margin-top:2px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;">Latest</div>
                     </div>
                   </div>
                 </div>
@@ -408,48 +393,7 @@ button{cursor:pointer;font-family:'Space Grotesk',sans-serif;}
 
             </div>
 
-            <!-- Right: AI Recommendations -->
-            <div class="fu2">
-              <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:10px;">AI RECOMMENDATIONS</div>
-              <div style="display:flex;flex-direction:column;gap:8px;">
 
-                <div class="rec-card" style="border-color:rgba(255,35,25,.2);background:rgba(255,35,25,.03);">
-                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-                    <div style="width:5px;height:5px;border-radius:50%;background:var(--red);"></div>
-                    <span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red);">High Priority</span>
-                  </div>
-                  <p style="font-size:11px;color:var(--t2);line-height:1.5;margin-bottom:8px;">The 92% match (2019 study) used identical trehalose concentrations. Consider narrowing your viability target from +15 pp to +10 pp to increase novelty to ~82%.</p>
-                  <button class="rec-apply" id="rec-apply-0" onclick="applyRec(0,'Narrow target to +10 pp based on literature (score → 82%)')">APPLY SUGGESTION</button>
-                </div>
-
-                <div class="rec-card" style="border-color:rgba(255,136,0,.2);background:rgba(255,136,0,.03);">
-                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-                    <div style="width:5px;height:5px;border-radius:50%;background:var(--amber);"></div>
-                    <span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);">Suggestion</span>
-                  </div>
-                  <p style="font-size:11px;color:var(--t2);line-height:1.5;margin-bottom:8px;">The 78% match used DMSO at 5% (not 10%). Specifying 5% DMSO as comparator would differentiate your protocol and boost novelty.</p>
-                  <button class="rec-apply" id="rec-apply-1" onclick="applyRec(1,'Specify DMSO 5% as comparator (vs 10%)')">APPLY SUGGESTION</button>
-                </div>
-
-                <div class="rec-card" style="border-color:rgba(0,179,65,.2);background:rgba(0,179,65,.03);">
-                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-                    <div style="width:5px;height:5px;border-radius:50%;background:var(--green);"></div>
-                    <span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green);">Strength</span>
-                  </div>
-                  <p style="font-size:11px;color:var(--t2);line-height:1.5;">Your hypothesis has a clear measurable outcome (+15 pp) and a defined mechanistic rationale (membrane stabilization). This is strong scientific framing.</p>
-                </div>
-
-                <div class="rec-card" style="border-color:var(--border);background:#FAFAF8;">
-                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-                    <div style="width:5px;height:5px;border-radius:50%;background:#000;"></div>
-                    <span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);">Missing Context</span>
-                  </div>
-                  <p style="font-size:11px;color:var(--t2);line-height:1.5;margin-bottom:8px;">None of the matched papers specified passage number for HeLa cells. Adding "passage 10–20" to your hypothesis would make it more reproducible.</p>
-                  <button class="rec-apply" id="rec-apply-2" onclick="applyRec(2,'Added HeLa passage number constraint (p10–p20)')">ADD TO HYPOTHESIS</button>
-                </div>
-
-              </div>
-            </div>
           </div>
 
         </div>
@@ -461,148 +405,14 @@ button{cursor:pointer;font-family:'Space Grotesk',sans-serif;}
           BACK
         </button>
         <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:10px;color:var(--t4);">Literature check complete. Proceed to plan generation.</span>
-          <button onclick="goTo('plan',3,'Generating protocol preview...',2200,'prot','nav-experiments')" style="display:flex;align-items:center;gap:7px;padding:8px 20px;background:#000;color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
-            CONTINUE TO PROTOCOL PREVIEW
+          <span style="font-size:10px;color:var(--t4);">Literature review complete. Proceed to the experiment planning workbench.</span>
+          <button onclick="goTo('audit',3,'Building experiment planning workbench...',1400,'protocol','nav-experiments')" style="display:flex;align-items:center;gap:7px;padding:8px 20px;background:#000;color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+            CONTINUE TO EXPERIMENT PLANNING
             <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
         </div>
       </div>
     </div>
-
-    <!-- =============================== -->
-    <!-- PAGE 3: EXPERIMENT PLAN         -->
-    <!-- =============================== -->
-    <div id="view-plan" class="view" style="height:100%;overflow-y:auto;background:var(--bg);">
-      <div style="flex:1;overflow-y:auto;">
-        <div style="max-width:1100px;margin:0 auto;padding:28px 32px;">
-
-          <div class="fu" style="margin-bottom:18px;">
-            <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:4px;">STEP 3 OF 5</div>
-              <div class="mono" style="font-size:22px;font-weight:700;letter-spacing:-.01em;">Quick Protocol Preview</div>
-            <p style="font-size:12px;color:var(--t3);margin-top:4px;">Scan the draft protocol and describe changes before full experiment planning.</p>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:14px;">
-
-            <!-- Left: Plan tabs -->
-            <div style="display:flex;flex-direction:column;gap:12px;">
-              <div class="fu1 card" style="border-color:#000;border-width:1.5px;">
-                <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:#FAFAF8;display:flex;align-items:center;gap:2px;">
-                  <span style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);">Draft Protocol</span>
-                  <div style="margin-left:auto;font-size:9px;color:var(--t4);font-weight:600;letter-spacing:.06em;">CLICK STEPS TO EDIT</div>
-                </div>
-
-                <!-- Protocol tab -->
-                <div id="tab-prot" style="padding:16px;">
-                  <div style="display:flex;flex-direction:column;gap:3px;" id="proto-steps"></div>
-                  <button onclick="addStep()" style="margin-top:12px;display:flex;align-items:center;gap:6px;width:100%;padding:8px;border:1px dashed var(--border);border-radius:8px;background:transparent;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t4);justify-content:center;transition:all .15s;" onmouseover="this.style.borderColor='#000';this.style.color='#000';" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--t4)';">
-                    + ADD STEP
-                  </button>
-                </div>
-
-                <!-- Materials tab -->
-                <div id="tab-mats" style="display:none;">
-                  <table style="width:100%;border-collapse:collapse;">
-                    <thead><tr style="background:#F5F5F1;border-bottom:1.5px solid #000;">
-                      <th style="text-align:left;padding:8px 14px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4);">MATERIAL</th>
-                      <th style="text-align:left;padding:8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4);" class="mono">CAT #</th>
-                      <th style="text-align:left;padding:8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4);">VENDOR</th>
-                      <th style="text-align:left;padding:8px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4);">QTY</th>
-                      <th style="text-align:right;padding:8px 14px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4);">COST</th>
-                    </tr></thead>
-                    <tbody id="mat-tbody"></tbody>
-                  </table>
-                </div>
-
-                <!-- Budget tab -->
-                <div id="tab-budg" style="display:none;padding:16px;">
-                  <div style="margin-bottom:14px;"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4);margin-bottom:5px;">TOTAL ESTIMATE</div>
-                    <div class="mono npop" style="font-size:44px;font-weight:700;letter-spacing:-.03em;line-height:1;">€2,840</div>
-                  </div>
-                  <div style="display:flex;flex-direction:column;gap:0;">
-                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;">Reagents & consumables</span><span class="mono" style="font-size:12px;font-weight:700;">€462</span></div>
-                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;">Cell line (ATCC CCL-2)</span><span class="mono" style="font-size:12px;font-weight:700;">€380</span></div>
-                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;">Controlled-rate freezer rental</span><span class="mono" style="font-size:12px;font-weight:700;">€1,200</span></div>
-                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;">Labor (40 h × €15/h)</span><span class="mono" style="font-size:12px;font-weight:700;">€600</span></div>
-                    <div style="display:flex;justify-content:space-between;padding:8px 0;"><span style="font-size:12px;color:var(--t4);">Contingency (10%)</span><span class="mono" style="font-size:12px;color:var(--t4);">€198</span></div>
-                  </div>
-                  <div style="display:flex;height:5px;border-radius:3px;overflow:hidden;margin-top:12px;gap:2px;">
-                    <div style="width:16%;background:#000;border-radius:2px;"></div><div style="width:13%;background:#555;"></div><div style="width:42%;background:#999;"></div><div style="width:21%;background:#bbb;"></div><div style="width:7%;background:#ddd;"></div>
-                  </div>
-                </div>
-
-                <!-- Timeline tab -->
-                <div id="tab-time" style="display:none;padding:16px;">
-                  <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:14px;"><div class="mono" style="font-size:36px;font-weight:700;letter-spacing:-.02em;">3</div><div style="font-size:13px;font-weight:600;color:var(--t3);">weeks total</div></div>
-                  <div style="display:flex;flex-direction:column;gap:8px;">
-                    <div style="padding:11px;border:1px solid var(--border);border-radius:8px;background:#FAFAF8;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:11px;font-weight:700;">Cell expansion & media prep</span><span class="mono" style="font-size:9px;color:var(--t4);">DAYS 1–3</span></div><p style="font-size:10px;color:var(--t4);margin-bottom:6px;">2 passages to ~2×10⁷ cells; prepare freezing media variants</p><div style="height:2px;background:#E8E8E4;border-radius:2px;"><div style="width:21%;height:100%;background:#000;border-radius:2px;"></div></div></div>
-                    <div style="padding:11px;border:1px solid var(--border);border-radius:8px;background:#FAFAF8;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:11px;font-weight:700;">Freezing experiments</span><span class="mono" style="font-size:9px;color:var(--t4);">DAYS 4–7</span></div><p style="font-size:10px;color:var(--t4);margin-bottom:6px;">n=3 replicates per condition; controlled-rate freezing; LN₂ storage</p><div style="height:2px;background:#E8E8E4;border-radius:2px;"><div style="width:29%;height:100%;background:#000;border-radius:2px;"></div></div></div>
-                    <div style="padding:11px;border:1px solid var(--border);border-radius:8px;background:#FAFAF8;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:11px;font-weight:700;">Thaw & viability assessment</span><span class="mono" style="font-size:9px;color:var(--t4);">DAYS 8–10</span></div><p style="font-size:10px;color:var(--t4);margin-bottom:6px;">Trypan Blue + Alamar Blue; hemocytometer counts</p><div style="height:2px;background:#E8E8E4;border-radius:2px;"><div style="width:21%;height:100%;background:#000;border-radius:2px;"></div></div></div>
-                    <div style="padding:11px;border:1px solid var(--border);border-radius:8px;background:#FAFAF8;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:11px;font-weight:700;">Data analysis & reporting</span><span class="mono" style="font-size:9px;color:var(--t4);">DAYS 11–21</span></div><p style="font-size:10px;color:var(--t4);margin-bottom:6px;">ANOVA, t-test, figures, final report</p><div style="height:2px;background:#E8E8E4;border-radius:2px;"><div style="width:79%;height:100%;background:#000;border-radius:2px;"></div></div></div>
-                  </div>
-                </div>
-              </div>
-              <div class="fu1 card" style="padding:14px 16px;border-color:#000;border-width:1.5px;">
-                <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:8px;">REQUEST CHANGES</div>
-                <textarea id="preview-change-input" rows="3" style="width:100%;font-size:12px;color:var(--text);line-height:1.6;border:1px solid var(--border);border-radius:8px;padding:10px;background:#FAFAF8;resize:none;" placeholder="Describe what to change, e.g. switch viability assay, change cell type, reduce budget, increase replicates..."></textarea>
-                <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-                  <button onclick="applyPreviewChange()" style="display:flex;align-items:center;gap:7px;padding:7px 14px;background:#000;color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">APPLY TO PREVIEW</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right: AI recommendations -->
-            <div class="fu2">
-              <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:10px;">AI RECOMMENDATIONS</div>
-              <div style="display:flex;flex-direction:column;gap:8px;">
-
-                <div class="rec-card" style="border-color:rgba(255,35,25,.2);background:rgba(255,35,25,.03);">
-                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><div style="width:5px;height:5px;border-radius:50%;background:var(--red);"></div><span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red);">Missing Step</span></div>
-                  <p style="font-size:11px;color:var(--t2);line-height:1.5;margin-bottom:8px;">No cell counting step before freezing. Add hemocytometer count to verify cell density meets 1–2×10⁶/mL before aliquoting.</p>
-                  <button class="rec-apply" id="plan-rec-0" onclick="applyPlanRec(0)">ADD TO PROTOCOL</button>
-                </div>
-
-                <div class="rec-card" style="border-color:rgba(255,136,0,.2);background:rgba(255,136,0,.03);">
-                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><div style="width:5px;height:5px;border-radius:50%;background:var(--amber);"></div><span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);">Reagent Alert</span></div>
-                  <p style="font-size:11px;color:var(--t2);line-height:1.5;margin-bottom:8px;">Trehalose Dihydrate (T9531) has 6-week lead time at Sigma-Aldrich. Alternative: T0167 (Supelco, 3-day delivery, −12%).</p>
-                  <button class="rec-apply" id="plan-rec-1" onclick="applyPlanRec(1)">SWITCH VENDOR</button>
-                </div>
-
-                <div class="rec-card" style="border-color:rgba(255,136,0,.2);background:rgba(255,136,0,.03);">
-                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><div style="width:5px;height:5px;border-radius:50%;background:var(--amber);"></div><span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);">Statistics</span></div>
-                  <p style="font-size:11px;color:var(--t2);line-height:1.5;margin-bottom:8px;">Current n=3 yields only 62% statistical power to detect +15 pp. Increasing to n=6 achieves 91% power. Timeline impact: +2 days.</p>
-                  <button class="rec-apply" id="plan-rec-2" onclick="applyPlanRec(2)">INCREASE TO N=6</button>
-                </div>
-
-                <div class="rec-card" style="border-color:var(--border);background:#FAFAF8;">
-                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><div style="width:5px;height:5px;border-radius:50%;background:#000;"></div><span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);">Parallelization</span></div>
-                  <p style="font-size:11px;color:var(--t2);line-height:1.5;margin-bottom:8px;">Steps 1 and 2 can run in parallel if two team members are available. This saves ~45 min per experimental day.</p>
-                  <button class="rec-apply" id="plan-rec-3" onclick="applyPlanRec(3)">APPLY PARALLEL PLAN</button>
-                </div>
-
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-      <!-- Action bar -->
-      <div class="action-bar">
-        <button onclick="navTo('qc',2)" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);">
-          <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-          BACK
-        </button>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span id="plan-next-hint" style="font-size:10px;color:var(--t4);">Preview ready? Build materials, budget, timeline, and detailed protocol.</span>
-          <button id="plan-next-btn" onclick="goTo('audit',4,'Building experiment plan...',1200,'materials')" style="display:flex;align-items:center;gap:7px;padding:8px 20px;background:#000;color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
-            <span id="plan-next-label">GO TO EXPERIMENT PLANNING</span>
-            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- =============================== -->
     <!-- PAGE 4: LAB READINESS AUDIT     -->
     <!-- =============================== -->
@@ -843,7 +653,7 @@ button{cursor:pointer;font-family:'Space Grotesk',sans-serif;}
 
 <script>
 // ─── Data ────────────────────────────────────────────────────────
-const STEPS = ['Hypothesis','Literature Check','Protocol Preview','Experiment Planning','Review'];
+const STEPS = ['Hypothesis','Literature Review','Experiment Planning','Summary'];
 const EXAMPLES = {
   cell:    { text:"Replacing sucrose with trehalose as a cryoprotectant in the freezing medium will increase post-thaw viability of HeLa cells by at least 15 percentage points compared to the standard DMSO protocol, due to trehalose's superior membrane stabilization at low temperatures.", domain:'Cell Biology' },
   diag:    { text:"A paper-based electrochemical biosensor functionalized with anti-CRP antibodies will detect C-reactive protein in whole blood at concentrations below 0.5 mg/L within 10 minutes, matching laboratory ELISA sensitivity without requiring sample preprocessing.", domain:'Diagnostics' },
@@ -886,21 +696,36 @@ const PLAN_MATS = [
   { name:'Alamar Blue viability reagent', category:'controls', cat:'DAL1025', vendor:'Thermo Fisher', qty:'25 mL', cost:168, selected:true, options:['Thermo EUR168','Abcam EUR184'] },
   { name:'Cryogenic gloves and LN2 labels', category:'safety', cat:'SAFE-LN2', vendor:'VWR', qty:'1 set', cost:74, selected:true, options:['VWR EUR74','Fisher EUR82'] }
 ];
+const TIMELINE_PHASES = [
+  { phase:'Supply Lock', days:'Day 0-4', owner:'Ops', status:'Dependency', detail:'Confirm trehalose, HeLa vial, viability reagents, cryovials, and LN2 access before bench work starts.' },
+  { phase:'Cell Expansion', days:'Day 1-3', owner:'Scientist', status:'Ready', detail:'Recover and expand HeLa cells to the target density; verify passage number and morphology.' },
+  { phase:'Media Setup', days:'Day 3-4', owner:'Scientist', status:'Ready', detail:'Prepare DMSO control and trehalose media variants; label matched cryovials before freezing.' },
+  { phase:'Freeze Run', days:'Day 5-7', owner:'Scientist + Core', status:'Core slot', detail:'Run controlled-rate freezing, transfer vials to LN2, and log freezer profile and vial map.' },
+  { phase:'Thaw Readout', days:'Day 8-10', owner:'Scientist', status:'Ready', detail:'Thaw matched vials, wash cells, then measure Trypan Blue and Alamar Blue viability.' },
+  { phase:'Decision Report', days:'Day 11-21', owner:'PI review', status:'Analysis', detail:'Compare viability delta against the +15 pp threshold and write go/no-go recommendation.' }
+];
 const LIT_PAPERS = [
   { title:'Trehalose as an alternative cryoprotectant for mammalian cell cryopreservation', author:'Kim et al.', journal:'Cryobiology, 2019', organism:'Cell', match:92, citations:184, summary:'Trehalose improved post-thaw viability in mammalian cell lines, but the protocol used the same concentration range as this hypothesis.' },
   { title:'Comparative analysis of cryoprotectants in HeLa cell freezing media', author:'Rossi and Mehta', journal:'Biopreservation & Biobanking, 2021', organism:'Cell', match:78, citations:61, summary:'DMSO and trehalose were compared in HeLa cells; the comparator concentration differs from the proposed experiment.' },
   { title:'Trehalose enhances post-thaw viability in adherent cancer cell lines', author:'Sato et al.', journal:'J. Cellular Biochemistry, 2018', organism:'Cell', match:65, citations:97, summary:'Supports the membrane-stabilization mechanism but does not test the exact HeLa protocol.' }
 ];
 
+const RESEARCH_HISTORY = [
+  { id:'H-004', label:'Trehalose cryoprotectant in HeLa cells', status:'active', score:76, date:'Today', tag:'In progress' },
+  { id:'H-003', label:'CRISPR-Cas9 off-target editing in iPSCs via high-fidelity variant', status:'approved', score:91, date:'Apr 18', tag:'Approved' },
+  { id:'H-002', label:'mRNA stability enhancement with pseudouridine in neural organoids', status:'approved', score:84, date:'Apr 11', tag:'Approved' },
+  { id:'H-001', label:'Lipid nanoparticle uptake efficiency in HEK293 under serum-free conditions', status:'rejected', score:38, date:'Mar 29', tag:'Rejected' },
+];
+
 let stepperStep = 1;
 let hypothesis = '';
 let auditScore = 76;
 let activePlanTab = 'prot';
-let activePlanningTab = 'materials';
+let activePlanningTab = 'protocol';
 let planGenerated = false;
 const fixesApplied = [false, false, false];
-const navMap = { input:'nav-workspace', qc:'nav-qc', plan:'nav-experiments', audit:'nav-audit', review:'nav-reviews' };
-const tabNavMap = { prot:'nav-experiments', mats:'nav-materials', budg:'nav-audit', time:'nav-audit' };
+const navMap = { input:'nav-workspace', qc:'nav-qc', plan:'nav-experiments', audit:'nav-experiments', review:'nav-reviews' };
+const tabNavMap = { prot:'nav-experiments', mats:'nav-experiments', budg:'nav-experiments', time:'nav-experiments' };
 
 // ─── Init ────────────────────────────────────────────────────────
 const TYPE_SCALE = 1.12;
@@ -937,6 +762,33 @@ function init() {
   renderMats();
   renderLitPapers();
   renderExperimentPlanning();
+  renderSummaryPage();
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('nav-history-list');
+  if (!list) return;
+  const statusColor = { active:'#FF8800', approved:'#22c55e', rejected:'#ef4444' };
+  list.innerHTML = RESEARCH_HISTORY.map((h, i) => `
+    <div onclick="loadHistory(${i})" style="display:flex;align-items:flex-start;gap:7px;padding:6px 8px;border-radius:5px;cursor:pointer;transition:background .12s;" onmouseover="this.style.background='rgba(0,0,0,.04)'" onmouseout="this.style.background='transparent'">
+      <div style="margin-top:3px;width:7px;height:7px;border-radius:50%;background:${statusColor[h.status]};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:10px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${h.label}">${h.label}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+          <span class="mono" style="font-size:8px;color:var(--t4);">${h.id}</span>
+          <span style="width:2px;height:2px;border-radius:50%;background:var(--t4);"></span>
+          <span style="font-size:8px;color:var(--t4);">${h.date}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadHistory(idx) {
+  const h = RESEARCH_HISTORY[idx];
+  if (h.status === 'active') { navTo('input', 1); return; }
+  toast('Loaded: ' + h.label.slice(0, 48) + '…');
 }
 
 function renderSegs(id, score, total) {
@@ -1008,7 +860,7 @@ function renderLitPapers() {
 // ─── Navigation ──────────────────────────────────────────────────
 function navTo(viewName, step, tab, activeNavOverride) {
   if (viewName === 'plan' && !tab) tab = 'prot';
-  if (viewName === 'audit' && !tab) tab = 'materials';
+  if (viewName === 'audit' && !tab) tab = 'protocol';
   if (viewName !== 'input' && !planGenerated) {
     toast('Enter a hypothesis first.');
     viewName = 'input';
@@ -1075,6 +927,8 @@ function startGen() {
   }
   hypothesis = val;
   planGenerated = true;
+  RESEARCH_HISTORY[0].label = val.length > 72 ? val.slice(0, 72) + '…' : val;
+  renderHistory();
   goTo('qc', 2, 'Running literature QC...', 2000);
 }
 
@@ -1110,12 +964,6 @@ function saveQCEdit() {
   toast('Hypothesis updated.');
 }
 
-function applyRec(idx, msg) {
-  const btn = document.getElementById('rec-apply-' + idx);
-  btn.classList.add('applied');
-  btn.textContent = 'APPLIED ✓';
-  toast(msg || 'Suggestion applied.');
-}
 
 // ─── Plan page ───────────────────────────────────────────────────
 function switchTab(name, btn) {
@@ -1198,13 +1046,6 @@ function addStep() {
   setTimeout(() => editStep(PROTO_STEPS.length - 1), 50);
 }
 
-function applyPlanRec(idx) {
-  const btn = document.getElementById('plan-rec-' + idx);
-  btn.classList.add('applied');
-  btn.textContent = 'APPLIED ✓';
-  const msgs = ['Cell counting step added to protocol.','Vendor switched to Supelco T0167 (3-day delivery).','n increased to 6 — protocol updated.','Parallel plan applied to timeline.'];
-  toast(msgs[idx] || 'Applied.');
-}
 
 // ─── Audit page ──────────────────────────────────────────────────
 function applyPreviewChange() {
@@ -1224,6 +1065,17 @@ function planningTotal() {
   return PLAN_MATS.filter(m => m.selected).reduce((sum, m) => sum + m.cost, 0);
 }
 
+function ganttSelect(idx) {
+  const p = TIMELINE_PHASES[idx];
+  const colors = ['#FF8800','#555','#B4B4B0','#000','#333','#B4B4B0'];
+  document.getElementById('gantt-detail-phase').textContent = p.phase;
+  document.getElementById('gantt-detail-days').textContent = p.days;
+  document.getElementById('gantt-detail-owner').textContent = p.owner + ' · ' + p.status;
+  document.getElementById('gantt-detail-text').textContent = p.detail;
+  document.getElementById('gantt-detail-dot').style.background = colors[idx];
+  document.getElementById('gantt-detail').style.display = 'block';
+}
+
 function renderExperimentPlanning() {
   const view = document.getElementById('view-audit');
   if (!view) return;
@@ -1232,9 +1084,9 @@ function renderExperimentPlanning() {
       <div style="max-width:1160px;margin:0 auto;padding:28px 32px;">
         <div class="fu" style="margin-bottom:18px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
           <div>
-            <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:4px;">STEP 4 OF 5</div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:4px;">STEP 3 OF 4</div>
             <div class="mono" style="font-size:22px;font-weight:700;letter-spacing:-.01em;">Experiment Planning</div>
-            <p style="font-size:12px;color:var(--t3);margin-top:4px;">Materials, budget, shipping timeline, and editable protocol details.</p>
+            <p style="font-size:12px;color:var(--t3);margin-top:4px;">One workbench for protocol, materials, budget, and timeline.</p>
           </div>
           <div style="text-align:right;">
             <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4);margin-bottom:4px;">TOTAL BUDGET</div>
@@ -1243,21 +1095,271 @@ function renderExperimentPlanning() {
         </div>
         <div class="card" style="border-color:#000;border-width:1.5px;overflow:visible;">
           <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:#FAFAF8;display:flex;align-items:center;gap:4px;">
-            <button class="tab-btn planning-tab active" onclick="switchPlanningTab('materials', this)">MATERIALS</button>
+            <button class="tab-btn planning-tab active" onclick="switchPlanningTab('protocol', this)">PROTOCOL</button>
+            <button class="tab-btn planning-tab" onclick="switchPlanningTab('materials', this)">MATERIALS</button>
             <button class="tab-btn planning-tab" onclick="switchPlanningTab('budget', this)">BUDGET</button>
             <button class="tab-btn planning-tab" onclick="switchPlanningTab('timeline', this)">TIMELINE</button>
-            <button class="tab-btn planning-tab" onclick="switchPlanningTab('protocol', this)">PROTOCOL</button>
           </div>
-          <div id="planning-materials" class="planning-panel" style="padding:16px;display:block;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" id="planning-material-grid"></div></div>
-          <div id="planning-budget" class="planning-panel" style="display:none;padding:16px;"><div style="display:grid;grid-template-columns:1.1fr .9fr;gap:14px;"><div id="budget-lines" style="display:flex;flex-direction:column;gap:8px;"></div><div class="card" style="padding:16px;border-color:#000;border-width:1.5px;"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4);margin-bottom:8px;">Budget Model</div><p style="font-size:12px;color:var(--t2);line-height:1.55;margin-bottom:12px;">Default uses the cheapest acceptable supplier for each selected material. Deselect items already in your lab to update the total immediately.</p><div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:10px;"><span style="font-size:12px;color:var(--t3);">Materials subtotal</span><span class="mono" id="budget-subtotal" style="font-size:14px;font-weight:700;">EUR ${planningTotal().toLocaleString()}</span></div><div style="display:flex;justify-content:space-between;margin-top:8px;"><span style="font-size:12px;color:var(--t3);">Personnel estimate</span><span class="mono" style="font-size:14px;font-weight:700;color:var(--t4);">TBD</span></div></div></div></div>
-          <div id="planning-timeline" class="planning-panel" style="display:none;padding:16px;"><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:14px;"><div class="mono" style="font-size:34px;font-weight:700;">3</div><div style="font-size:13px;font-weight:700;color:var(--t3);">weeks including shipping buffer</div></div><div style="display:flex;flex-direction:column;gap:8px;">${['Shipping and receiving: 3-6 days for trehalose, cells, and viability reagents.','Step 1: Expand HeLa cells and prepare media variants, days 1-3.','Step 2: Run freezing conditions and transfer to LN2, days 4-7.','Step 3: Thaw, wash, and run Trypan Blue plus Alamar Blue assays, days 8-10.','Step 4: Analyze viability delta and prepare report, days 11-21.'].map((t,i)=>`<div style="padding:11px;border:1px solid var(--border);border-radius:8px;background:#FAFAF8;"><div style="display:flex;gap:10px;align-items:flex-start;"><div class="mono" style="width:22px;height:22px;border-radius:4px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;">${i}</div><p style="font-size:12px;color:var(--t2);line-height:1.5;">${t}</p></div></div>`).join('')}</div></div>
-          <div id="planning-protocol" class="planning-panel" style="display:none;padding:16px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;"><div><div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:10px;">Main Steps</div><div id="planning-proto-main" style="display:flex;flex-direction:column;gap:8px;"></div></div><div class="card" style="padding:16px;border-color:#000;border-width:1.5px;"><div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:8px;">Detailed Step</div><textarea id="planning-proto-detail" rows="10" style="width:100%;font-size:12px;color:var(--text);line-height:1.55;border:1px solid var(--border);border-radius:8px;padding:10px;background:#FAFAF8;resize:none;">${PROTO_STEPS[0]}</textarea><button onclick="savePlanningProtocolDetail()" style="margin-top:10px;width:100%;padding:8px;border:none;border-radius:6px;background:#000;color:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">SAVE STEP</button></div></div></div>
+          <div id="planning-protocol" class="planning-panel" style="display:flex;flex-direction:column;overflow:hidden;">
+            <!-- Header -->
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px 11px;border-bottom:1px solid var(--border);flex-shrink:0;">
+              <div>
+                <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:2px;">Protocol Steps</div>
+                <div style="font-size:10px;color:var(--t3);">Click <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:middle;"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> on any step to edit it inline</div>
+              </div>
+              <button onclick="addPlanStep()" style="display:flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid var(--border);border-radius:5px;background:#fff;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:var(--t3);" onmouseover="this.style.borderColor='#000';this.style.color='#000'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--t3)'">
+                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                ADD STEP
+              </button>
+            </div>
+
+            <!-- Step list -->
+            <div style="flex:1;overflow-y:auto;padding:14px 16px;">
+              <div id="planning-proto-main" style="display:flex;flex-direction:column;gap:7px;"></div>
+            </div>
+
+            <!-- AI Chat -->
+            <div style="border-top:1.5px solid var(--border);background:#FAFAF8;flex-shrink:0;">
+              <div style="padding:9px 16px 6px;display:flex;align-items:center;gap:7px;">
+                <div style="width:18px;height:18px;border-radius:4px;background:#000;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg width="10" height="10" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                </div>
+                <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">AI Protocol Assistant</span>
+                <span style="margin-left:auto;font-size:8px;color:var(--t4);font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border:1px solid var(--border);border-radius:3px;">Backend pending</span>
+              </div>
+              <div id="proto-chat-msgs" style="max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:0 16px 8px;"></div>
+              <div style="display:flex;gap:8px;padding:8px 16px 12px;">
+                <input id="proto-chat-input" type="text" placeholder="Refine steps, add controls, check safety, request replicates…" onkeydown="if(event.key==='Enter')sendProtoChat()" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text);background:#fff;font-family:'Space Grotesk',sans-serif;outline:none;" onfocus="this.style.borderColor='#000'" onblur="this.style.borderColor='var(--border)'"/>
+                <button onclick="sendProtoChat()" style="padding:8px 16px;border:none;border-radius:6px;background:#000;color:#fff;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">SEND</button>
+              </div>
+            </div>
+          </div>
+          <div id="planning-materials" class="planning-panel" style="padding:16px;display:none;"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px;"><div><div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:4px;">Materials Inventory</div><p style="font-size:12px;color:var(--t3);line-height:1.55;">This tab answers what the lab needs. Pricing and supplier choices live in Budget.</p></div><div class="mono" id="materials-count" style="font-size:22px;font-weight:700;"></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" id="planning-material-grid"></div></div>
+          <div id="planning-budget" class="planning-panel" style="display:none;padding:16px;"><div style="display:grid;grid-template-columns:1.35fr .65fr;gap:14px;"><div><div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:10px;">Purchasing Plan</div><div id="budget-lines" style="display:flex;flex-direction:column;gap:8px;"></div></div><div class="card" style="padding:16px;border-color:#000;border-width:1.5px;"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4);margin-bottom:8px;">Budget Model</div><p style="font-size:12px;color:var(--t2);line-height:1.55;margin-bottom:12px;">Only items marked as needed are counted. Supplier switches and owned/in-stock items update this total.</p><div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:10px;"><span style="font-size:12px;color:var(--t3);">Purchasing subtotal</span><span class="mono" id="budget-subtotal" style="font-size:14px;font-weight:700;">EUR ${planningTotal().toLocaleString()}</span></div><div style="display:flex;justify-content:space-between;margin-top:8px;"><span style="font-size:12px;color:var(--t3);">Personnel estimate</span><span class="mono" style="font-size:14px;font-weight:700;color:var(--t4);">TBD</span></div><div style="margin-top:14px;padding:10px;border:1px solid var(--border);border-radius:8px;background:#FAFAF8;"><div style="font-size:10px;font-weight:700;color:var(--text);margin-bottom:4px;">Cheapest acceptable default</div><p style="font-size:11px;color:var(--t3);line-height:1.45;">The budget starts with the lowest acceptable supplier, but preserves alternates for reliability.</p></div></div></div></div>
+          <div id="planning-timeline" class="planning-panel" style="display:none;">
+
+            <!-- Stats strip -->
+            <div style="padding:11px 16px;border-bottom:1px solid var(--border);background:#FAFAF8;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+              <div style="display:flex;align-items:center;gap:16px;">
+                <div style="display:flex;align-items:baseline;gap:5px;">
+                  <span class="mono" style="font-size:22px;font-weight:700;letter-spacing:-.02em;">21</span>
+                  <span style="font-size:10px;font-weight:600;color:var(--t3);">days</span>
+                </div>
+                <div style="width:1px;height:14px;background:var(--border);"></div>
+                <span style="font-size:10px;color:var(--t3);">8 bench days</span>
+                <div style="width:1px;height:14px;background:var(--border);"></div>
+                <span style="font-size:10px;color:var(--t3);">11 analysis days</span>
+                <div style="width:1px;height:14px;background:var(--border);"></div>
+                <span style="font-size:10px;color:var(--t3);">Critical path: Supply lock + Core freezer slot</span>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center;">
+                <div style="display:flex;align-items:center;gap:5px;"><div style="width:10px;height:4px;background:var(--amber);border-radius:1px;"></div><span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t4);">Dependency</span></div>
+                <div style="display:flex;align-items:center;gap:5px;"><div style="width:10px;height:4px;background:#000;border-radius:1px;"></div><span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t4);">Primary</span></div>
+                <div style="display:flex;align-items:center;gap:5px;"><div style="width:10px;height:4px;background:#B4B4B0;border-radius:1px;"></div><span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t4);">Support</span></div>
+              </div>
+            </div>
+
+            <!-- Gantt chart -->
+            <div style="padding:16px;overflow-x:auto;">
+              <div style="min-width:500px;">
+
+                <!-- Week header (22 units: D0–D21) -->
+                <div style="display:flex;margin-left:130px;border-bottom:1.5px solid #000;">
+                  <div style="flex:7;padding:0 6px 3px;border-right:1px solid #000;"><span style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4);">WEEK 1</span></div>
+                  <div style="flex:7;padding:0 6px 3px;border-right:1px solid #000;"><span style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4);">WEEK 2</span></div>
+                  <div style="flex:8;padding:0 6px 3px;"><span style="font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4);">WEEK 3</span></div>
+                </div>
+
+                <!-- Day tick labels -->
+                <div style="display:flex;margin-left:130px;margin-bottom:8px;border-bottom:1px solid var(--border);position:relative;">
+                  <div style="flex:22;position:relative;height:16px;">
+                    <!-- Tick at D0 -->
+                    <span class="mono" style="position:absolute;left:0%;font-size:7px;color:var(--t4);transform:translateX(-50%);top:2px;">0</span>
+                    <!-- Tick at D4 -->
+                    <span class="mono" style="position:absolute;left:18.18%;font-size:7px;color:var(--amber);transform:translateX(-50%);top:2px;font-weight:700;">4</span>
+                    <!-- Tick at D7 (week boundary) -->
+                    <span class="mono" style="position:absolute;left:31.82%;font-size:7px;color:var(--t4);transform:translateX(-50%);top:2px;">7</span>
+                    <!-- Tick at D10 -->
+                    <span class="mono" style="position:absolute;left:45.45%;font-size:7px;color:var(--t4);transform:translateX(-50%);top:2px;">10</span>
+                    <!-- Tick at D14 (week boundary) -->
+                    <span class="mono" style="position:absolute;left:63.64%;font-size:7px;color:var(--t4);transform:translateX(-50%);top:2px;">14</span>
+                    <!-- Tick at D21 -->
+                    <span class="mono" style="position:absolute;left:100%;font-size:7px;color:var(--t4);transform:translateX(-100%);top:2px;">21</span>
+                  </div>
+                </div>
+
+                <!-- Phase rows -->
+                <div style="display:flex;flex-direction:column;gap:5px;" id="gantt-rows">
+
+                  <!-- Row: Supply Lock (D0–D4, amber, dependency) -->
+                  <div style="display:flex;align-items:center;gap:0;">
+                    <div style="width:130px;flex-shrink:0;padding-right:10px;">
+                      <div style="font-size:10px;font-weight:700;color:var(--text);line-height:1.2;">Supply Lock</div>
+                      <div style="font-size:9px;color:var(--t4);">Ops · Dependency</div>
+                    </div>
+                    <div style="flex:22;position:relative;height:30px;">
+                      <!-- Week grid lines -->
+                      <div style="position:absolute;left:0;top:0;width:100%;height:100%;background:repeating-linear-gradient(90deg,transparent,transparent calc(100%/22 - 1px),#F0F0EC calc(100%/22 - 1px),#F0F0EC calc(100%/22));pointer-events:none;"></div>
+                      <div style="position:absolute;left:31.82%;top:0;width:1px;height:100%;background:rgba(0,0,0,.08);"></div>
+                      <div style="position:absolute;left:63.64%;top:0;width:1px;height:100%;background:rgba(0,0,0,.08);"></div>
+                      <!-- Bar: D0–D4 = left:0%, width:4/22=18.18% → but supply lock is 5 days (D0,1,2,3,4) so width=5/22=22.73% -->
+                      <div onclick="ganttSelect(0)" style="position:absolute;left:0%;width:22.73%;top:7px;height:16px;background:var(--amber);border-radius:3px;cursor:pointer;display:flex;align-items:center;padding:0 6px;transition:opacity .15s;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'" title="Supply Lock: Day 0–4">
+                        <span style="font-size:8px;font-weight:700;color:#fff;white-space:nowrap;" class="mono">D0–4</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Row: Cell Expansion (D1–D3, grey, parallel) -->
+                  <div style="display:flex;align-items:center;gap:0;">
+                    <div style="width:130px;flex-shrink:0;padding-right:10px;">
+                      <div style="font-size:10px;font-weight:700;color:var(--text);line-height:1.2;">Cell Expansion</div>
+                      <div style="font-size:9px;color:var(--t4);">Scientist · Ready</div>
+                    </div>
+                    <div style="flex:22;position:relative;height:30px;">
+                      <div style="position:absolute;left:0;top:0;width:100%;height:100%;background:repeating-linear-gradient(90deg,transparent,transparent calc(100%/22 - 1px),#F0F0EC calc(100%/22 - 1px),#F0F0EC calc(100%/22));pointer-events:none;"></div>
+                      <div style="position:absolute;left:31.82%;top:0;width:1px;height:100%;background:rgba(0,0,0,.08);"></div>
+                      <div style="position:absolute;left:63.64%;top:0;width:1px;height:100%;background:rgba(0,0,0,.08);"></div>
+                      <!-- Bar: D1–D3 = left:1/22=4.55%, width:3/22=13.64% -->
+                      <div onclick="ganttSelect(1)" style="position:absolute;left:4.55%;width:13.64%;top:7px;height:16px;background:#555;border-radius:3px;cursor:pointer;display:flex;align-items:center;padding:0 6px;transition:opacity .15s;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'" title="Cell Expansion: Day 1–3">
+                        <span style="font-size:8px;font-weight:700;color:#fff;white-space:nowrap;" class="mono">D1–3</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Row: Media Setup (D3–D4, support) -->
+                  <div style="display:flex;align-items:center;gap:0;">
+                    <div style="width:130px;flex-shrink:0;padding-right:10px;">
+                      <div style="font-size:10px;font-weight:700;color:var(--text);line-height:1.2;">Media Setup</div>
+                      <div style="font-size:9px;color:var(--t4);">Scientist · Ready</div>
+                    </div>
+                    <div style="flex:22;position:relative;height:30px;">
+                      <div style="position:absolute;left:0;top:0;width:100%;height:100%;background:repeating-linear-gradient(90deg,transparent,transparent calc(100%/22 - 1px),#F0F0EC calc(100%/22 - 1px),#F0F0EC calc(100%/22));pointer-events:none;"></div>
+                      <div style="position:absolute;left:31.82%;top:0;width:1px;height:100%;background:rgba(0,0,0,.08);"></div>
+                      <div style="position:absolute;left:63.64%;top:0;width:1px;height:100%;background:rgba(0,0,0,.08);"></div>
+                      <!-- Bar: D3–D4 = left:3/22=13.64%, width:2/22=9.09% -->
+                      <div onclick="ganttSelect(2)" style="position:absolute;left:13.64%;width:9.09%;top:7px;height:16px;background:#B4B4B0;border-radius:3px;cursor:pointer;display:flex;align-items:center;padding:0 6px;transition:opacity .15s;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'" title="Media Setup: Day 3–4">
+                        <span style="font-size:8px;font-weight:700;color:#fff;white-space:nowrap;" class="mono">D3–4</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Row: Freeze Run (D5–D7, black, critical) -->
+                  <div style="display:flex;align-items:center;gap:0;">
+                    <div style="width:130px;flex-shrink:0;padding-right:10px;">
+                      <div style="font-size:10px;font-weight:700;color:var(--text);line-height:1.2;">Freeze Run</div>
+                      <div style="font-size:9px;color:var(--t4);">Scientist + Core</div>
+                    </div>
+                    <div style="flex:22;position:relative;height:30px;">
+                      <div style="position:absolute;left:0;top:0;width:100%;height:100%;background:repeating-linear-gradient(90deg,transparent,transparent calc(100%/22 - 1px),#F0F0EC calc(100%/22 - 1px),#F0F0EC calc(100%/22));pointer-events:none;"></div>
+                      <div style="position:absolute;left:31.82%;top:0;width:1px;height:100%;background:rgba(0,0,0,.08);"></div>
+                      <div style="position:absolute;left:63.64%;top:0;width:1px;height:100%;background:rgba(0,0,0,.08);"></div>
+                      <!-- Bar: D5–D7 = left:5/22=22.73%, width:3/22=13.64% -->
+                      <div onclick="ganttSelect(3)" style="position:absolute;left:22.73%;width:13.64%;top:7px;height:16px;background:#000;border-radius:3px;cursor:pointer;display:flex;align-items:center;padding:0 6px;transition:opacity .15s;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'" title="Freeze Run: Day 5–7">
+                        <span style="font-size:8px;font-weight:700;color:#fff;white-space:nowrap;" class="mono">D5–7</span>
+                      </div>
+                      <!-- Core slot badge -->
+                      <div style="position:absolute;left:22.73%;top:2px;font-size:7px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#000;white-space:nowrap;">CORE SLOT</div>
+                    </div>
+                  </div>
+
+                  <!-- Row: Thaw Readout (D8–D10) -->
+                  <div style="display:flex;align-items:center;gap:0;">
+                    <div style="width:130px;flex-shrink:0;padding-right:10px;">
+                      <div style="font-size:10px;font-weight:700;color:var(--text);line-height:1.2;">Thaw Readout</div>
+                      <div style="font-size:9px;color:var(--t4);">Scientist · Ready</div>
+                    </div>
+                    <div style="flex:22;position:relative;height:30px;">
+                      <div style="position:absolute;left:0;top:0;width:100%;height:100%;background:repeating-linear-gradient(90deg,transparent,transparent calc(100%/22 - 1px),#F0F0EC calc(100%/22 - 1px),#F0F0EC calc(100%/22));pointer-events:none;"></div>
+                      <div style="position:absolute;left:31.82%;top:0;width:1px;height:100%;background:rgba(0,0,0,.08);"></div>
+                      <div style="position:absolute;left:63.64%;top:0;width:1px;height:100%;background:rgba(0,0,0,.08);"></div>
+                      <!-- Bar: D8–D10 = left:8/22=36.36%, width:3/22=13.64% -->
+                      <div onclick="ganttSelect(4)" style="position:absolute;left:36.36%;width:13.64%;top:7px;height:16px;background:#333;border-radius:3px;cursor:pointer;display:flex;align-items:center;padding:0 6px;transition:opacity .15s;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'" title="Thaw Readout: Day 8–10">
+                        <span style="font-size:8px;font-weight:700;color:#fff;white-space:nowrap;" class="mono">D8–10</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Row: Decision Report (D11–D21) -->
+                  <div style="display:flex;align-items:center;gap:0;">
+                    <div style="width:130px;flex-shrink:0;padding-right:10px;">
+                      <div style="font-size:10px;font-weight:700;color:var(--text);line-height:1.2;">Decision Report</div>
+                      <div style="font-size:9px;color:var(--t4);">PI review · Analysis</div>
+                    </div>
+                    <div style="flex:22;position:relative;height:30px;">
+                      <div style="position:absolute;left:0;top:0;width:100%;height:100%;background:repeating-linear-gradient(90deg,transparent,transparent calc(100%/22 - 1px),#F0F0EC calc(100%/22 - 1px),#F0F0EC calc(100%/22));pointer-events:none;"></div>
+                      <div style="position:absolute;left:31.82%;top:0;width:1px;height:100%;background:rgba(0,0,0,.08);"></div>
+                      <div style="position:absolute;left:63.64%;top:0;width:1px;height:100%;background:rgba(0,0,0,.08);"></div>
+                      <!-- Bar: D11–D21 = left:11/22=50%, width:11/22=50% -->
+                      <div onclick="ganttSelect(5)" style="position:absolute;left:50%;width:50%;top:7px;height:16px;background:#B4B4B0;border-radius:3px;cursor:pointer;display:flex;align-items:center;padding:0 8px;transition:opacity .15s;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'" title="Decision Report: Day 11–21">
+                        <span style="font-size:8px;font-weight:700;color:#fff;white-space:nowrap;" class="mono">D11–21 · Analysis &amp; report</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Milestone row -->
+                  <div style="display:flex;align-items:center;gap:0;margin-top:4px;">
+                    <div style="width:130px;flex-shrink:0;padding-right:10px;">
+                      <div style="font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t4);">Milestones</div>
+                    </div>
+                    <div style="flex:22;position:relative;height:22px;">
+                      <div style="position:absolute;left:0;top:0;width:100%;height:1px;background:var(--border);top:10px;"></div>
+                      <!-- D4: Supply confirmed -->
+                      <div style="position:absolute;left:18.18%;top:4px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:1px;">
+                        <div style="width:8px;height:8px;background:var(--amber);border-radius:1px;transform:rotate(45deg);"></div>
+                      </div>
+                      <!-- D7: Freeze done -->
+                      <div style="position:absolute;left:31.82%;top:4px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:1px;">
+                        <div style="width:8px;height:8px;background:#000;border-radius:1px;transform:rotate(45deg);"></div>
+                      </div>
+                      <!-- D10: Data collected -->
+                      <div style="position:absolute;left:45.45%;top:4px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:1px;">
+                        <div style="width:8px;height:8px;background:#333;border-radius:1px;transform:rotate(45deg);"></div>
+                      </div>
+                      <!-- D21: Report done -->
+                      <div style="position:absolute;left:100%;top:4px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:1px;">
+                        <div style="width:8px;height:8px;background:var(--green);border-radius:1px;transform:rotate(45deg);"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Milestone labels -->
+                  <div style="display:flex;align-items:center;gap:0;">
+                    <div style="width:130px;flex-shrink:0;"></div>
+                    <div style="flex:22;position:relative;height:16px;">
+                      <span style="position:absolute;left:18.18%;transform:translateX(-50%);font-size:8px;color:var(--amber);font-weight:700;white-space:nowrap;" class="mono">Supply OK</span>
+                      <span style="position:absolute;left:31.82%;transform:translateX(-50%);font-size:8px;color:#000;font-weight:700;white-space:nowrap;" class="mono">In LN₂</span>
+                      <span style="position:absolute;left:45.45%;transform:translateX(-50%);font-size:8px;color:#333;font-weight:700;white-space:nowrap;" class="mono">Data ready</span>
+                      <span style="position:absolute;left:100%;transform:translateX(-100%);font-size:8px;color:var(--green);font-weight:700;white-space:nowrap;" class="mono">Go/No-go</span>
+                    </div>
+                  </div>
+
+                </div><!-- /gantt-rows -->
+              </div>
+            </div>
+
+            <!-- Phase detail (shown on bar click) -->
+            <div id="gantt-detail" style="display:none;margin:0 16px 14px;padding:12px 14px;border:1.5px solid #000;border-radius:8px;background:#FAFAF8;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div id="gantt-detail-dot" style="width:8px;height:8px;border-radius:2px;transform:rotate(45deg);background:#000;"></div>
+                  <span id="gantt-detail-phase" style="font-size:12px;font-weight:700;"></span>
+                  <span id="gantt-detail-days" class="mono" style="font-size:10px;color:var(--t4);"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span id="gantt-detail-owner" style="font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t4);"></span>
+                  <button onclick="document.getElementById('gantt-detail').style.display='none'" style="font-size:10px;color:var(--t4);background:none;border:none;cursor:pointer;padding:0 4px;">✕</button>
+                </div>
+              </div>
+              <p id="gantt-detail-text" style="font-size:12px;color:var(--t2);line-height:1.55;"></p>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>
     <div class="action-bar">
-      <button onclick="navTo('plan',3)" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);">BACK</button>
-      <div style="display:flex;align-items:center;gap:8px;"><button onclick="exportPlan()" style="padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);">EXPORT PDF / PRINT</button><button onclick="goTo('review',5,'Running scientist review...',1600)" style="display:flex;align-items:center;gap:7px;padding:8px 20px;background:#000;color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">PROCEED TO REVIEW</button></div>
+      <button onclick="navTo('qc',2)" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);">BACK</button>
+      <div style="display:flex;align-items:center;gap:8px;"><button onclick="exportPlan()" style="padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);">EXPORT PDF / PRINT</button><button onclick="goTo('review',4,'Preparing summary...',900)" style="display:flex;align-items:center;gap:7px;padding:8px 20px;background:#000;color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">GO TO SUMMARY</button></div>
     </div>`;
   renderPlanningMaterials();
   renderPlanningProtocolList();
@@ -1271,19 +1373,21 @@ function renderPlanningMaterials() {
   grid.innerHTML = MATERIAL_CATEGORIES.map(cat => {
     const rows = PLAN_MATS.filter(m => m.category === cat.key).map(m => {
       const idx = PLAN_MATS.indexOf(m);
-      return `<div style="display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:start;padding:8px 0;border-top:1px solid var(--border);"><input type="checkbox" ${m.selected ? 'checked' : ''} onchange="toggleMaterial(${idx})" style="margin-top:2px;"><div><div style="font-size:11px;font-weight:700;color:var(--text);">${m.name}</div><div style="font-size:10px;color:var(--t3);margin-top:2px;">${m.vendor} · ${m.qty} · ${m.cat}</div><button onclick="chooseSupplier(${idx})" style="margin-top:5px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--border);border-radius:4px;background:#fff;padding:4px 7px;">CHANGE SUPPLIER</button></div><div class="mono" style="font-size:12px;font-weight:700;">EUR ${m.cost}</div></div>`;
+      return `<div style="display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:start;padding:8px 0;border-top:1px solid var(--border);"><input type="checkbox" ${m.selected ? 'checked' : ''} onchange="toggleMaterial(${idx})" style="margin-top:2px;"><div><div style="font-size:11px;font-weight:700;color:var(--text);">${m.name}</div><div style="font-size:10px;color:var(--t3);margin-top:2px;">${m.qty} · ${m.cat}</div></div><div style="font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${m.selected ? 'var(--green)' : 'var(--t4)'};">${m.selected ? 'Need' : 'In lab'}</div></div>`;
     }).join('');
     return `<div class="card" style="padding:14px;"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text);margin-bottom:4px;">${cat.label}</div><p style="font-size:10px;color:var(--t3);line-height:1.45;margin-bottom:8px;">${cat.note}</p>${rows || '<p style="font-size:11px;color:var(--t4);">No items required.</p>'}</div>`;
   }).join('');
-  if (budgetLines) budgetLines.innerHTML = MATERIAL_CATEGORIES.map(cat => {
-    const subtotal = PLAN_MATS.filter(m => m.category === cat.key && m.selected).reduce((s,m)=>s + m.cost,0);
-    return `<div style="display:flex;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:#FAFAF8;"><span style="font-size:12px;color:var(--t2);">${cat.label}</span><span class="mono" style="font-size:12px;font-weight:700;">EUR ${subtotal}</span></div>`;
+  if (budgetLines) budgetLines.innerHTML = PLAN_MATS.map((m, idx) => {
+    const active = m.selected;
+    return `<div style="display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:start;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:${active ? '#FAFAF8' : '#fff'};opacity:${active ? '1' : '.48'};"><input type="checkbox" ${active ? 'checked' : ''} onchange="toggleMaterial(${idx})" style="margin-top:2px;"><div><div style="font-size:12px;font-weight:700;color:var(--text);">${m.name}</div><div style="font-size:10px;color:var(--t3);margin-top:3px;">${m.vendor} · ${m.qty} · ${m.cat}</div><button onclick="chooseSupplier(${idx})" style="margin-top:6px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--border);border-radius:4px;background:#fff;padding:4px 7px;">CHANGE SUPPLIER</button></div><div class="mono" style="font-size:13px;font-weight:700;text-align:right;">EUR ${m.cost}</div></div>`;
   }).join('');
   const total = planningTotal().toLocaleString();
   const totalEl = document.getElementById('budget-total');
   const subEl = document.getElementById('budget-subtotal');
+  const countEl = document.getElementById('materials-count');
   if (totalEl) totalEl.textContent = 'EUR ' + total;
   if (subEl) subEl.textContent = 'EUR ' + total;
+  if (countEl) countEl.textContent = PLAN_MATS.filter(m => m.selected).length + ' / ' + PLAN_MATS.length;
   applyTypeScale();
 }
 
@@ -1295,13 +1399,12 @@ function switchPlanningTab(name, btn) {
   document.querySelectorAll('.planning-tab').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   else {
-    const order = { materials:0, budget:1, timeline:2, protocol:3 };
+    const order = { protocol:0, materials:1, budget:2, timeline:3 };
     const tabs = document.querySelectorAll('.planning-tab');
     if (tabs[order[name]]) tabs[order[name]].classList.add('active');
   }
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const navId = name === 'materials' ? 'nav-materials' : name === 'protocol' ? 'nav-protocols' : 'nav-audit';
-  document.getElementById(navId).classList.add('active');
+  document.getElementById('nav-experiments').classList.add('active');
 }
 
 function toggleMaterial(idx) {
@@ -1326,20 +1429,134 @@ function chooseSupplier(idx) {
 function renderPlanningProtocolList() {
   const el = document.getElementById('planning-proto-main');
   if (!el) return;
-  el.innerHTML = PROTO_STEPS.map((step, i) => `<button onclick="selectPlanningProtocolStep(${i})" style="text-align:left;padding:10px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:12px;color:var(--t2);line-height:1.45;"><span class="mono" style="font-weight:700;margin-right:6px;">${i + 1}</span>${step}</button>`).join('');
+  el.innerHTML = PROTO_STEPS.map((step, i) => `
+    <div id="pplan-step-${i}" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(0,0,0,.25)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div class="mono" style="width:20px;height:20px;border:1.5px solid #000;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:2px;">${i + 1}</div>
+      <div id="pplan-content-${i}" style="flex:1;min-width:0;">
+        <p style="font-size:12px;color:var(--t2);line-height:1.6;margin:0;">${step}</p>
+      </div>
+      <button id="pplan-edit-btn-${i}" onclick="editPlanStep(${i})" title="Edit step" style="flex-shrink:0;width:24px;height:24px;border:1px solid var(--border);border-radius:4px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t4);transition:all .12s;margin-top:1px;" onmouseover="this.style.borderColor='#000';this.style.color='#000'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--t4)'">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+    </div>
+  `).join('');
 }
 
-let selectedPlanningStep = 0;
-function selectPlanningProtocolStep(idx) {
-  selectedPlanningStep = idx;
-  document.getElementById('planning-proto-detail').value = PROTO_STEPS[idx];
+function editPlanStep(idx) {
+  const content = document.getElementById('pplan-content-' + idx);
+  const btn = document.getElementById('pplan-edit-btn-' + idx);
+  if (!content || !btn) return;
+  btn.style.display = 'none';
+  content.innerHTML = `
+    <textarea id="pplan-ta-${idx}" rows="3" style="width:100%;font-size:12px;color:var(--t2);line-height:1.6;border:1.5px solid #000;border-radius:6px;padding:7px 9px;background:#fff;resize:vertical;font-family:'Space Grotesk',sans-serif;outline:none;">${PROTO_STEPS[idx]}</textarea>
+    <div style="display:flex;gap:6px;margin-top:7px;">
+      <button onclick="savePlanStep(${idx})" style="padding:4px 14px;border:none;border-radius:4px;background:#000;color:#fff;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;">SAVE</button>
+      <button onclick="cancelPlanStep(${idx})" style="padding:4px 14px;border:1px solid var(--border);border-radius:4px;background:#fff;color:var(--t3);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;">CANCEL</button>
+    </div>`;
+  document.getElementById('pplan-ta-' + idx).focus();
 }
 
-function savePlanningProtocolDetail() {
-  PROTO_STEPS[selectedPlanningStep] = document.getElementById('planning-proto-detail').value.trim();
-  renderProtoSteps();
+function savePlanStep(idx) {
+  const ta = document.getElementById('pplan-ta-' + idx);
+  if (!ta) return;
+  const val = ta.value.trim();
+  if (val) PROTO_STEPS[idx] = val;
   renderPlanningProtocolList();
-  toast('Protocol step updated.');
+  renderProtoSteps();
+  toast('Step ' + (idx + 1) + ' updated.');
+}
+
+function cancelPlanStep(idx) {
+  renderPlanningProtocolList();
+}
+
+function addPlanStep() {
+  PROTO_STEPS.push('New step — describe what needs to happen here.');
+  renderPlanningProtocolList();
+  renderProtoSteps();
+  setTimeout(() => editPlanStep(PROTO_STEPS.length - 1), 30);
+}
+
+const protoChatHistory = [];
+
+function sendProtoChat() {
+  const input = document.getElementById('proto-chat-input');
+  if (!input) return;
+  const val = input.value.trim();
+  if (!val) return;
+  input.value = '';
+  protoChatHistory.push({ role: 'user', text: val });
+  renderProtoChat();
+  setTimeout(() => {
+    const preview = val.length > 80 ? val.slice(0, 80) + '…' : val;
+    protoChatHistory.push({ role: 'ai', text: 'Backend not connected yet. Your request has been logged: "' + preview + '". The AI agent will refine the protocol steps once wired.' });
+    renderProtoChat();
+  }, 900);
+}
+
+function renderProtoChat() {
+  const msgs = document.getElementById('proto-chat-msgs');
+  if (!msgs) return;
+  if (!protoChatHistory.length) { msgs.innerHTML = ''; return; }
+  msgs.innerHTML = protoChatHistory.map(m => `
+    <div style="display:flex;gap:7px;align-items:flex-start;${m.role === 'user' ? 'flex-direction:row-reverse;' : ''}">
+      <div style="width:18px;height:18px;border-radius:3px;background:${m.role === 'user' ? '#000' : 'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        ${m.role === 'user'
+          ? '<svg width="9" height="9" fill="white" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>'
+          : '<svg width="9" height="9" fill="none" stroke="#555" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>'}
+      </div>
+      <div style="max-width:86%;padding:6px 10px;border-radius:6px;background:${m.role === 'user' ? '#000' : '#fff'};border:1px solid var(--border);font-size:11px;color:${m.role === 'user' ? '#fff' : 'var(--t2)'};line-height:1.5;">${m.text}</div>
+    </div>
+  `).join('');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function renderSummaryPage() {
+  const view = document.getElementById('view-review');
+  if (!view) return;
+  view.innerHTML = `
+    <div style="flex:1;overflow-y:auto;">
+      <div style="max-width:1100px;margin:0 auto;padding:28px 32px;">
+        <div class="fu" style="margin-bottom:18px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
+          <div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:4px;">STEP 4 OF 4</div>
+            <div class="mono" style="font-size:22px;font-weight:700;letter-spacing:-.01em;">Summary</div>
+            <p style="font-size:12px;color:var(--t3);margin-top:4px;">Final runnable experiment package: literature signal, protocol, materials, budget, and timeline.</p>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4);margin-bottom:4px;">READINESS</div>
+            <div class="mono" style="font-size:36px;font-weight:700;letter-spacing:-.03em;line-height:1;color:var(--green);">92%</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-bottom:14px;">
+          <div class="card" style="border-color:#000;border-width:1.5px;padding:18px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:10px;">Experiment Decision</div>
+            <div class="mono" style="font-size:24px;font-weight:700;letter-spacing:-.01em;margin-bottom:8px;">Run highest-confidence in vitro validation first.</div>
+            <p style="font-size:12px;color:var(--t2);line-height:1.65;">Literature review found similar work, but no exact operational match for the selected HeLa trehalose condition. The plan is scoped to produce a clear go/no-go viability result before expanding into broader cryopreservation conditions.</p>
+          </div>
+          <div class="card" style="padding:18px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:12px;">At a Glance</div>
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;justify-content:space-between;gap:10px;"><span style="font-size:12px;color:var(--t3);">Novelty signal</span><b style="font-size:12px;">Similar work exists</b></div>
+              <div style="display:flex;justify-content:space-between;gap:10px;"><span style="font-size:12px;color:var(--t3);">Budget</span><b class="mono" style="font-size:12px;">EUR ${planningTotal().toLocaleString()}</b></div>
+              <div style="display:flex;justify-content:space-between;gap:10px;"><span style="font-size:12px;color:var(--t3);">Timeline</span><b style="font-size:12px;">3 weeks</b></div>
+              <div style="display:flex;justify-content:space-between;gap:10px;"><span style="font-size:12px;color:var(--t3);">Validation</span><b style="font-size:12px;">Trypan Blue + Alamar Blue</b></div>
+            </div>
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+    <div class="action-bar">
+      <button onclick="navTo('audit',3)" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);">BACK TO PLANNING</button>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="exportPlan()" style="padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);">EXPORT PDF / PRINT</button>
+        <button onclick="toast('Summary saved as the final runnable plan.')" style="display:flex;align-items:center;gap:7px;padding:8px 20px;background:#000;color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">SAVE SUMMARY</button>
+      </div>
+    </div>`;
+  applyTypeScale();
 }
 
 function applyFix(idx, pts) {
@@ -1400,3 +1617,4 @@ init();
 </script>
 </body>
 </html>
+
