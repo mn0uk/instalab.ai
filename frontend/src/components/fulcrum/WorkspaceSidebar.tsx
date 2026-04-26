@@ -168,15 +168,17 @@ export function WorkspaceSidebar() {
           const path = hasExp
             ? `/workspace/${experimentId}/planning/${sub.tab}`
             : "/";
-          const active = hasExp && location.pathname === path;
           return (
             <NavLink
               key={sub.tab}
               to={path}
+              end
               style={{ paddingLeft: 24 }}
-              className={`fu-nav-item ${active ? "active" : ""} ${
-                !hasExp ? "pointer-events-none opacity-40" : ""
-              }`}
+              className={({ isActive }) =>
+                `fu-nav-item ${isActive && hasExp ? "active" : ""} ${
+                  !hasExp ? "pointer-events-none opacity-40" : ""
+                }`
+              }
             >
               <sub.Icon />
               {sub.label}
