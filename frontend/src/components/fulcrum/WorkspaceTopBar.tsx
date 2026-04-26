@@ -5,10 +5,8 @@ export function WorkspaceTopBar() {
       style={{ borderColor: "var(--fu-border)" }}
     >
       <div>
-        <div className="font-mono text-[12px] font-bold uppercase tracking-[.1em]">LabRun</div>
-        <div className="text-[10px] italic text-fu-t4">
-          From hypothesis to runnable experiment plan
-        </div>
+        <div className="font-mono text-[12px] font-bold uppercase tracking-[.1em]">Your AI Lab Assistant</div>
+        <div className="text-[10px] italic text-fu-t4">Hypothesis to Experiment</div>
       </div>
       <div className="flex items-center gap-2">
         <div
