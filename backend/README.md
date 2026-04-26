@@ -1,4 +1,4 @@
-# Backend - AI Scientist API
+# Backend - LabRun API
 
 FastAPI service that orchestrates a multi-agent pipeline:
 - Novelty Check (agentic RAG over Tavily)

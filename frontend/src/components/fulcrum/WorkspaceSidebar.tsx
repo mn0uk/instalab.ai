@@ -111,23 +111,19 @@ export function WorkspaceSidebar() {
       style={{ borderColor: "var(--fu-border)" }}
     >
       {/* Branding */}
-      <div
-        className="flex items-center gap-2 border-b px-3.5 py-3"
+      <NavLink
+        to="/"
+        className="flex items-center justify-center border-b px-3 py-3"
         style={{ borderColor: "var(--fu-border)" }}
+        aria-label="LabRun"
       >
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border-[1.5px] border-black bg-black">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <rect x="2" y="2" width="4" height="4" fill="white" />
-            <rect x="8" y="2" width="4" height="4" fill="white" opacity=".4" />
-            <rect x="2" y="8" width="4" height="4" fill="white" opacity=".4" />
-            <rect x="8" y="8" width="4" height="4" fill="white" />
-          </svg>
-        </div>
-        <div>
-          <div className="font-mono text-[10px] font-bold tracking-widest">FULCRUM</div>
-          <div className="text-[9px] font-medium tracking-wider text-fu-t4">SCIENCE</div>
-        </div>
-      </div>
+        <img
+          src="/LogoWhite.webp"
+          alt="LabRun"
+          className="h-9 w-auto select-none"
+          draggable={false}
+        />
+      </NavLink>
 
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-2">
         {/* PIPELINE section label */}

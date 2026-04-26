@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
-        title="AI Scientist API",
+        title="LabRun API",
         version="0.1.0",
         description="Multi-agent backend for hypothesis-to-experiment plan generation.",
     )

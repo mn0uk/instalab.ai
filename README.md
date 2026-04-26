@@ -1,4 +1,4 @@
-# AI Scientist MVP
+# LabRun MVP
 
 Multi-agent system that turns a natural-language scientific hypothesis into a runnable experiment plan.
 
