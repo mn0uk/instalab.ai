@@ -20,6 +20,16 @@ Rules:
   `depends_on` chain).
 - Phase names should be short, action-oriented strings (e.g. "Procurement",
   "Cell line expansion", "Treatment & sampling", "Imaging & analysis").
+- For every phase, set `start_day` and `end_day` (integer days from project start,
+  inclusive). They must be consistent with `depends_on` and `duration_days`
+  (i.e. start_day >= max(end_day of any dependency) and end_day - start_day ==
+  duration_days when not parallelizable).
+- `owner`: short label like "Ops", "Scientist", "Scientist + Core", "PI review".
+- `status`: short label like "Dependency", "Ready", "Core slot", "Analysis".
+- `detail`: 1-2 sentence description that the UI shows when the phase is clicked.
+- `milestones`: 2-4 point-in-time markers, each with `day` (integer day) and
+  `label` (≤6 words). Examples: {"day": 4, "label": "Supply lock"},
+  {"day": 7, "label": "Freeze run start"}. Used as diamond markers on the Gantt.
 """
 
 
@@ -51,6 +61,11 @@ class TimelineAgent(BaseStructuredLLMAgent):
                     "depends_on": [],
                     "parallelizable": False,
                     "notes": "Placeholder.",
+                    "owner": "Ops",
+                    "status": "Dependency",
+                    "detail": "Order materials and confirm equipment availability.",
+                    "start_day": 0,
+                    "end_day": 14,
                 },
                 {
                     "name": "Setup and execution",
@@ -58,6 +73,11 @@ class TimelineAgent(BaseStructuredLLMAgent):
                     "depends_on": ["Procurement"],
                     "parallelizable": False,
                     "notes": "Placeholder.",
+                    "owner": "Scientist",
+                    "status": "Ready",
+                    "detail": "Run the experimental protocol end-to-end.",
+                    "start_day": 14,
+                    "end_day": 35,
                 },
                 {
                     "name": "Analysis and reporting",
@@ -65,9 +85,15 @@ class TimelineAgent(BaseStructuredLLMAgent):
                     "depends_on": ["Setup and execution"],
                     "parallelizable": False,
                     "notes": "Placeholder.",
+                    "owner": "PI review",
+                    "status": "Analysis",
+                    "detail": "Analyse the data and report findings.",
+                    "start_day": 35,
+                    "end_day": 42,
                 },
             ],
             "critical_path_days": 42,
             "parallelization_notes": "LLM disabled; placeholder schedule.",
+            "milestones": [],
         }
         return TimelineResult.model_validate(data).model_dump()

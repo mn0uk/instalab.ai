@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { NavLink, useParams } from "react-router-dom";
+import { NavLink, useLocation, useParams } from "react-router-dom";
 
 import { api } from "../../api/client";
 import type { RunStatus } from "../../api/types";
+import { fireToast } from "../../lib/useToast";
 
 function NavIconHypothesis() {
   return (
@@ -43,6 +44,39 @@ function NavIconCheckCircle() {
   );
 }
 
+function NavIconBox() {
+  return (
+    <svg width="13" height="13" fill="none" strokeWidth="1.8" viewBox="0 0 24 24">
+      <path
+        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+        stroke="currentColor"
+      />
+    </svg>
+  );
+}
+
+function NavIconDollar() {
+  return (
+    <svg width="13" height="13" fill="none" strokeWidth="1.8" viewBox="0 0 24 24">
+      <path
+        d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7H14a3.5 3.5 0 010 7H6"
+        stroke="currentColor"
+      />
+    </svg>
+  );
+}
+
+function NavIconCalendar() {
+  return (
+    <svg width="13" height="13" fill="none" strokeWidth="1.8" viewBox="0 0 24 24">
+      <path
+        d="M8 7V3m8 4V3M3 11h18M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"
+        stroke="currentColor"
+      />
+    </svg>
+  );
+}
+
 function statusDotColor(status: RunStatus): string {
   if (status === "RUNNING" || status === "QUEUED") return "var(--fu-amber)";
   if (status === "SUCCEEDED") return "#22c55e";
@@ -60,6 +94,7 @@ function formatDate(iso: string): string {
 
 export function WorkspaceSidebar() {
   const { experimentId } = useParams();
+  const location = useLocation();
   const { data: experiments } = useQuery({
     queryKey: ["experiments"],
     queryFn: api.listExperiments,
@@ -67,6 +102,8 @@ export function WorkspaceSidebar() {
   });
 
   const hasExp = Boolean(experimentId);
+  const planningActive =
+    hasExp && location.pathname.startsWith(`/workspace/${experimentId}/planning`);
 
   return (
     <aside
@@ -117,14 +154,39 @@ export function WorkspaceSidebar() {
           Literature Review
         </NavLink>
         <NavLink
-          to={hasExp ? `/workspace/${experimentId}/planning` : "/"}
-          className={({ isActive }) =>
-            `fu-nav-item ${isActive && hasExp ? "active" : ""} ${!hasExp ? "pointer-events-none opacity-40" : ""}`
+          to={hasExp ? `/workspace/${experimentId}/planning/protocol` : "/"}
+          className={() =>
+            `fu-nav-item ${planningActive ? "active" : ""} ${!hasExp ? "pointer-events-none opacity-40" : ""}`
           }
         >
           <NavIconFlask />
           Experiment Analysis
         </NavLink>
+        {(
+          [
+            { tab: "materials", label: "Materials", Icon: NavIconBox },
+            { tab: "budget", label: "Budget", Icon: NavIconDollar },
+            { tab: "timeline", label: "Timeline", Icon: NavIconCalendar },
+          ] as const
+        ).map((sub) => {
+          const path = hasExp
+            ? `/workspace/${experimentId}/planning/${sub.tab}`
+            : "/";
+          const active = hasExp && location.pathname === path;
+          return (
+            <NavLink
+              key={sub.tab}
+              to={path}
+              style={{ paddingLeft: 24 }}
+              className={`fu-nav-item ${active ? "active" : ""} ${
+                !hasExp ? "pointer-events-none opacity-40" : ""
+              }`}
+            >
+              <sub.Icon />
+              {sub.label}
+            </NavLink>
+          );
+        })}
         <NavLink
           to={hasExp ? `/workspace/${experimentId}/summary` : "/"}
           className={({ isActive }) =>
@@ -147,12 +209,18 @@ export function WorkspaceSidebar() {
               const shortId = `H-${String(i + 1).padStart(3, "0")}`;
               const date = formatDate(e.created_at);
               const dotColor = statusDotColor(e.status);
+              const isActive = e.id === experimentId;
 
               return (
                 <NavLink
                   key={e.id}
                   to={`/workspace/${e.id}/literature`}
-                  className={`flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-[rgba(0,0,0,.04)] ${e.id === experimentId ? "bg-[rgba(0,0,0,.04)]" : ""}`}
+                  onClick={() => {
+                    if (!isActive) {
+                      fireToast(`Loading ${shortId}…`);
+                    }
+                  }}
+                  className={`flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-[rgba(0,0,0,.04)] ${isActive ? "bg-[rgba(0,0,0,.04)]" : ""}`}
                 >
                   <div
                     className="mt-1 h-[7px] w-[7px] shrink-0 rounded-full"
@@ -169,6 +237,14 @@ export function WorkspaceSidebar() {
                       <span className="font-mono text-[8px] text-fu-t4">{shortId}</span>
                       <span className="h-0.5 w-0.5 rounded-full bg-fu-t4" />
                       <span className="text-[8px] text-fu-t4">{date}</span>
+                      {e.novelty_score != null && (
+                        <>
+                          <span className="h-0.5 w-0.5 rounded-full bg-fu-t4" />
+                          <span className="font-mono text-[8px] font-bold text-fu-t3">
+                            {e.novelty_score}/100
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </NavLink>

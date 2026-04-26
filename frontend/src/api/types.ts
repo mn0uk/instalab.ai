@@ -1,5 +1,7 @@
 export type RunStatus = "QUEUED" | "RUNNING" | "SUCCEEDED" | "FAILED";
 export type NoveltyLabel = "NOT_FOUND" | "SIMILAR_EXISTS" | "EXACT_MATCH";
+export type PaperStance = "support" | "contradict" | "neutral";
+export type VerificationState = "tested" | "assumed" | "scope";
 
 export interface Reference {
   title: string;
@@ -7,6 +9,10 @@ export interface Reference {
   source?: string | null;
   snippet?: string | null;
   relevance?: number | null;
+  stance?: PaperStance | null;
+  author?: string | null;
+  organism?: string | null;
+  citations?: number | null;
 }
 
 export interface MatchedEntities {
@@ -16,12 +22,19 @@ export interface MatchedEntities {
   model_or_system: string;
 }
 
+export interface VerificationNode {
+  label: string;
+  state: VerificationState;
+  note: string;
+}
+
 export interface NoveltyResult {
   label: NoveltyLabel;
   confidence: number;
   rationale: string;
   references: Reference[];
   matched_entities: MatchedEntities;
+  verification_nodes: VerificationNode[];
 }
 
 export interface ProtocolStep {
@@ -42,6 +55,14 @@ export interface ProtocolResult {
   citations: Reference[];
 }
 
+export type MaterialCategory =
+  | "bio"
+  | "reagents"
+  | "equipment"
+  | "consumables"
+  | "controls"
+  | "safety";
+
 export interface MaterialLineItem {
   name: string;
   supplier?: string | null;
@@ -52,6 +73,9 @@ export interface MaterialLineItem {
   quantity?: number | null;
   notes?: string | null;
   source_url?: string | null;
+  category?: MaterialCategory | null;
+  options?: string[];
+  selected?: boolean;
 }
 
 export interface MaterialsResult {
@@ -68,12 +92,23 @@ export interface TimelinePhase {
   depends_on: string[];
   parallelizable: boolean;
   notes?: string | null;
+  owner?: string | null;
+  status?: string | null;
+  detail?: string | null;
+  start_day?: number | null;
+  end_day?: number | null;
+}
+
+export interface Milestone {
+  day: number;
+  label: string;
 }
 
 export interface TimelineResult {
   phases: TimelinePhase[];
   critical_path_days: number;
   parallelization_notes?: string | null;
+  milestones?: Milestone[];
 }
 
 export interface ValidationResult {
@@ -84,9 +119,15 @@ export interface ValidationResult {
   standards_referenced: string[];
 }
 
+export interface ConflictItem {
+  title: string;
+  detail: string;
+}
+
 export interface SynthesisResult {
   overall_confidence: number;
   cross_section_conflicts: string[];
+  conflicts?: ConflictItem[];
   summary: string;
 }
 
@@ -98,6 +139,7 @@ export interface ExperimentSummary {
   error?: string | null;
   created_at: string;
   updated_at: string;
+  novelty_score?: number | null;
 }
 
 export interface AgentRunSummary {

@@ -17,6 +17,10 @@ agents and produce:
 - `cross_section_conflicts`: concrete conflicts between sections, each phrased as
   one sentence (e.g. "Timeline mentions 'antibody validation' phase but materials
   list does not include any antibody"). Empty list if no conflicts found.
+- `conflicts`: the SAME conflicts surfaced as a structured list, each item with
+  `title` (≤8 words, the headline) and `detail` (1 sentence explaining why it
+  matters). The UI renders this as a 3-cell grid, so prefer 0, 1, 2, or 3 items.
+  Keep `cross_section_conflicts` and `conflicts` consistent with each other.
 - `summary`: a short paragraph (3-6 sentences) suitable for a working scientist:
   what is being proposed, why it matters, the main risks, and the headline cost
   and duration if available from the materials and timeline sections.
@@ -53,6 +57,7 @@ class SynthesisAgent(BaseStructuredLLMAgent):
         data = {
             "overall_confidence": 0.3,
             "cross_section_conflicts": [],
+            "conflicts": [],
             "summary": "LLM disabled; minimal synthesis emitted.",
         }
         return SynthesisResult.model_validate(data).model_dump()

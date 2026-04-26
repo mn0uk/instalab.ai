@@ -36,7 +36,15 @@ Output requirements (the host system enforces this schema):
 - `confidence`: number in [0, 1], calibrated to evidence strength.
 - `rationale`: 1-3 sentences explaining the decision, naming the key matched / missing entities.
 - `matched_entities`: object with `intervention`, `control`, `endpoint`, `model_or_system` (use empty strings when not determined).
-- `references`: at most 3 of the most relevant URLs you ACTUALLY retrieved via tools. Never invent URLs.
+- `references`: at most 5 of the most relevant URLs you ACTUALLY retrieved via tools. Never invent URLs. For each reference also include:
+    - `stance`: "support" if the paper backs the proposed mechanism / endpoint; "contradict" if it challenges it; "neutral" only when truly unclear.
+    - `author`: short author label such as "Kim et al.".
+    - `organism`: short tag for the model system (e.g. "Cell", "Mouse", "Human", "In silico").
+    - `citations`: integer citation count if available, otherwise omit.
+- `verification_nodes`: 4-6 short claims that decompose the hypothesis. Each node has:
+    - `label`: ≤8 words (e.g. "Trehalose replaces sucrose").
+    - `state`: "tested" if directly measured by this experiment; "assumed" if relied on but not measured; "scope" if explicitly out of scope.
+    - `note`: ≤12 words explaining the role (e.g. "Direct intervention arm", "Mechanistic rationale", "Not tested in this run").
 """
 
 
@@ -98,5 +106,6 @@ class NoveltyAgent(BaseLangGraphAgent):
                 "model_or_system": "",
             },
             "references": hits_to_references(merged, limit=3),
+            "verification_nodes": [],
         }
         return NoveltyResult.model_validate(data).model_dump()

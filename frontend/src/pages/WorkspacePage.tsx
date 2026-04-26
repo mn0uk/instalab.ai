@@ -1,13 +1,43 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FormEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 
 import { api } from "../api/client";
-import type { ProtocolStep, ReviewCreateRequest } from "../api/types";
-import { WorkspaceStepper } from "../components/fulcrum/WorkspaceStepper";
+import type {
+  ExperimentDetailResponse,
+  MaterialLineItem,
+  MaterialsResult,
+  ProtocolStep,
+  ReviewCreateRequest,
+  TimelinePhase,
+} from "../api/types";
 import StatusPill from "../components/StatusPill";
-import { noveltyLabelTag, noveltyStatCounts, noveltyToPaperRows } from "../lib/planAdapters";
-import { isStepAccessible, parseWorkspaceStep } from "../lib/workspaceSteps";
+import {
+  MATERIAL_CATEGORY_ORDER,
+  materialCategoryDisplay,
+  materialsByCategory,
+  noveltyLabelTag,
+  noveltyStatCounts,
+  splitPapersByStance,
+  synthesisConflicts,
+  verificationNodes,
+  type LiteraturePaperRow,
+} from "../lib/planAdapters";
+import { fireToast } from "../lib/useToast";
+import {
+  DEFAULT_PLANNING_TAB,
+  isStepAccessible,
+  parsePlanningTab,
+  parseWorkspaceStep,
+  PLANNING_TABS,
+  type PlanningTab,
+} from "../lib/workspaceSteps";
 
 // ---------------------------------------------------------------------------
 // Shared primitives
@@ -41,21 +71,33 @@ function PencilIcon() {
   );
 }
 
-/** Minimal toast rendered inside a page */
-function Toast({ msg }: { msg: string | null }) {
-  if (!msg) return null;
-  return (
-    <div className="pointer-events-none fixed bottom-6 right-6 z-50 rounded-md bg-black px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-wider text-white shadow-xl">
-      {msg}
-    </div>
-  );
-}
+// ---------------------------------------------------------------------------
+// Step-transition overlay (with Agent pipeline trace)
+// ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
-// Step-transition overlay
-// ---------------------------------------------------------------------------
+const AGENT_TRACE_LINES: { agent: string; log: string }[] = [
+  { agent: "Claim Verifier", log: "Splitting hypothesis into tested claims and assumptions." },
+  { agent: "Novelty", log: "Scanning literature for prior work and exact matches." },
+  { agent: "Protocol", log: "Drafting executable steps with concrete parameters." },
+  { agent: "Materials", log: "Resolving suppliers, catalog numbers, and pack sizes." },
+  { agent: "Timeline", log: "Sequencing phases, lead-time risks, and milestones." },
+  { agent: "Validation", log: "Anchoring endpoints and acceptance criteria." },
+  { agent: "Synthesis", log: "Cross-checking sections for conflicts and readiness." },
+];
 
 function StepOverlay({ visible, msg }: { visible: boolean; msg: string }) {
+  const [tickIdx, setTickIdx] = useState(0);
+  useEffect(() => {
+    if (!visible) {
+      setTickIdx(0);
+      return;
+    }
+    const id = setInterval(() => {
+      setTickIdx((i) => Math.min(i + 1, AGENT_TRACE_LINES.length));
+    }, 220);
+    return () => clearInterval(id);
+  }, [visible]);
+
   if (!visible) return null;
   return (
     <div
@@ -68,7 +110,51 @@ function StepOverlay({ visible, msg }: { visible: boolean; msg: string }) {
         <div className="fu-db2 h-1.5 w-1.5 rounded-full bg-black" />
         <div className="fu-db3 h-1.5 w-1.5 rounded-full bg-black" />
       </div>
-      <p className="font-mono text-[11px] font-bold uppercase tracking-widest text-fu-t3">{msg}</p>
+      <div className="text-center">
+        <p className="font-mono text-[12px] font-bold uppercase tracking-[.18em] text-fu-text">
+          Agent pipeline
+        </p>
+        <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-widest text-fu-t3">
+          {msg}
+        </p>
+      </div>
+      <div
+        id="agent-trace"
+        className="mt-1 flex w-[420px] max-w-[80vw] flex-col gap-1.5 rounded-md border border-fu-border bg-white/80 p-3 backdrop-blur"
+      >
+        {AGENT_TRACE_LINES.map((line, i) => {
+          const done = i < tickIdx;
+          const active = i === tickIdx;
+          return (
+            <div
+              key={line.agent}
+              className="flex items-start gap-2"
+              style={{ opacity: done ? 1 : active ? 1 : 0.4 }}
+            >
+              <div
+                className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full"
+                style={{
+                  background: done ? "var(--fu-green)" : active ? "#000" : "var(--fu-t4)",
+                }}
+              />
+              <div className="min-w-0 flex-1">
+                <div className="font-mono text-[9px] font-bold uppercase tracking-[.1em] text-fu-text">
+                  {line.agent}
+                </div>
+                <div className="text-[10px] text-fu-t3">{line.log}</div>
+              </div>
+              {active && (
+                <span className="font-mono text-[9px] font-bold uppercase text-fu-t4">…</span>
+              )}
+              {done && (
+                <span className="font-mono text-[9px] font-bold uppercase text-fu-green">
+                  done
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -78,18 +164,18 @@ function StepOverlay({ visible, msg }: { visible: boolean; msg: string }) {
 // ---------------------------------------------------------------------------
 
 export default function WorkspacePage() {
-  const { experimentId = "", step: stepParam } = useParams();
+  const {
+    experimentId = "",
+    step: stepParam,
+    tab: tabParam,
+  } = useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [overlayMsg, setOverlayMsg] = useState<string | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function toast(msg: string) {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    setToastMsg(msg);
-    toastTimer.current = setTimeout(() => setToastMsg(null), 2800);
+    fireToast(msg);
   }
 
   function navigateTo(path: string, msg = "Loading…") {
@@ -107,6 +193,16 @@ export default function WorkspacePage() {
   if (!step) {
     return <Navigate to={`/workspace/${experimentId}/literature`} replace />;
   }
+  if (step === "planning" && !tabParam) {
+    return (
+      <Navigate
+        to={`/workspace/${experimentId}/planning/${DEFAULT_PLANNING_TAB}`}
+        replace
+      />
+    );
+  }
+  const planningTab: PlanningTab =
+    step === "planning" ? parsePlanningTab(tabParam) ?? DEFAULT_PLANNING_TAB : DEFAULT_PLANNING_TAB;
 
   const detail = useQuery({
     queryKey: ["experiment", experimentId],
@@ -150,7 +246,6 @@ export default function WorkspacePage() {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-fu-bg">
-      <WorkspaceStepper experimentId={experimentId} currentStep={step} detail={data} />
       <div className="min-h-0 flex-1 overflow-y-auto">
         {step === "hypothesis" && (
           <HypothesisStep experimentId={experimentId} data={data} toast={toast} />
@@ -170,7 +265,7 @@ export default function WorkspacePage() {
             experimentId={experimentId}
             qc={qc}
             toast={toast}
-            navigateTo={navigateTo}
+            tab={planningTab}
           />
         )}
         {step === "summary" && (
@@ -178,7 +273,6 @@ export default function WorkspacePage() {
         )}
       </div>
       <StepOverlay visible={Boolean(overlayMsg)} msg={overlayMsg ?? ""} />
-      <Toast msg={toastMsg} />
     </div>
   );
 }
@@ -193,7 +287,7 @@ function HypothesisStep({
   toast,
 }: {
   experimentId: string;
-  data: import("../api/types").ExperimentDetailResponse;
+  data: ExperimentDetailResponse;
   toast: (m: string) => void;
 }) {
   const qc = useQueryClient();
@@ -244,12 +338,12 @@ function HypothesisStep({
             onChange={(e) => setDomain(e.target.value)}
             className="cursor-pointer border-0 bg-transparent text-[10px] font-bold uppercase tracking-wider text-fu-t3 focus:outline-none"
           >
-            <option value="">Select domain</option>
-            <option value="Cell Biology">Cell Biology</option>
-            <option value="Diagnostics">Diagnostics</option>
-            <option value="Gut Health">Gut Health</option>
-            <option value="Climate Science">Climate Science</option>
-            <option value="Neuroscience">Neuroscience</option>
+            <option value="">SELECT DOMAIN</option>
+            <option value="Cell Biology">CELL BIOLOGY</option>
+            <option value="Diagnostics">DIAGNOSTICS</option>
+            <option value="Gut Health">GUT HEALTH</option>
+            <option value="Climate Science">CLIMATE SCIENCE</option>
+            <option value="Neuroscience">NEUROSCIENCE</option>
           </select>
           <button
             type="button"
@@ -269,6 +363,125 @@ function HypothesisStep({
 // LiteratureStep
 // ---------------------------------------------------------------------------
 
+function VerificationGraph({
+  novelty,
+}: {
+  novelty: ExperimentDetailResponse["latest_plan"] extends infer P
+    ? P extends { novelty?: infer N }
+      ? N
+      : never
+    : never;
+}) {
+  const nodes = verificationNodes(novelty as Parameters<typeof verificationNodes>[0]);
+  if (!nodes.length) return null;
+  const colorOf = (state: string) =>
+    state === "tested"
+      ? "var(--fu-green)"
+      : state === "assumed"
+        ? "var(--fu-amber)"
+        : "var(--fu-t4)";
+
+  return (
+    <div className="fu-card mb-3">
+      <div
+        className="flex items-center justify-between gap-3 border-b px-4 py-3"
+        style={{ borderColor: "var(--fu-border)" }}
+      >
+        <span className="text-[9px] font-bold uppercase tracking-wider text-fu-t4">
+          Hypothesis Verification Graph
+        </span>
+        <span className="font-mono text-[9px] tracking-wide text-fu-t4">
+          <span style={{ color: "var(--fu-green)" }}>green</span> = tested ·{" "}
+          <span style={{ color: "var(--fu-amber)" }}>amber</span> = assumed ·{" "}
+          <span style={{ color: "var(--fu-t4)" }}>grey</span> = out of scope
+        </span>
+      </div>
+      <div className="p-4">
+        <div
+          className="grid items-stretch gap-2"
+          style={{ gridTemplateColumns: `repeat(${Math.min(nodes.length, 5)}, 1fr)` }}
+        >
+          {nodes.slice(0, 6).map((n, i) => (
+            <div
+              key={i}
+              className="relative rounded-lg bg-white p-3"
+              style={{ border: `1px solid ${colorOf(n.state)}`, minHeight: 96 }}
+            >
+              {i < Math.min(nodes.length, 6) - 1 && (
+                <div
+                  className="absolute"
+                  style={{
+                    right: -9,
+                    top: 38,
+                    width: 9,
+                    height: 1,
+                    background: "var(--fu-border)",
+                  }}
+                />
+              )}
+              <div
+                className="mb-2 h-2 w-2 rounded-full"
+                style={{ background: colorOf(n.state) }}
+              />
+              <div className="text-[11px] font-bold leading-snug text-fu-text">
+                {n.label}
+              </div>
+              <p className="mt-1.5 text-[9px] leading-snug text-fu-t3">{n.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PaperRow({ p, contradicting }: { p: LiteraturePaperRow; contradicting?: boolean }) {
+  return (
+    <div
+      className="border-b py-2.5"
+      style={{
+        borderColor: "var(--fu-border)",
+        background: contradicting ? "rgba(255,35,25,.035)" : "transparent",
+      }}
+    >
+      <div className="flex items-start justify-between gap-2.5">
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-bold leading-snug text-fu-text">{p.title}</p>
+          {(p.author || p.source || p.citations != null) && (
+            <p className="mt-0.5 text-[10px] leading-snug text-fu-t3">
+              {[p.author, p.source, p.citations != null ? `${p.citations} citations` : null]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          )}
+          {(p.organism || p.source || p.url) && (
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {p.organism && <span className="source-badge">{p.organism}</span>}
+              {p.source && <span className="source-badge">via {p.source}</span>}
+              {p.url && (
+                <span className="source-badge">
+                  <a href={p.url} target="_blank" rel="noreferrer">
+                    open source
+                  </a>
+                </span>
+              )}
+            </div>
+          )}
+          {p.summary && (
+            <p className="mt-1.5 text-[10px] leading-snug text-fu-t2">{p.summary}</p>
+          )}
+        </div>
+        <span
+          className="shrink-0 font-mono text-xs font-bold"
+          style={{ color: p.matchColor }}
+        >
+          {p.matchPct}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function LiteratureStep({
   experimentId,
   data,
@@ -277,14 +490,14 @@ function LiteratureStep({
   navigateTo,
 }: {
   experimentId: string;
-  data: import("../api/types").ExperimentDetailResponse;
+  data: ExperimentDetailResponse;
   qc: ReturnType<typeof useQueryClient>;
   toast: (m: string) => void;
   navigateTo: (path: string, msg?: string) => void;
 }) {
   const { experiment, latest_plan, agent_runs } = data;
   const novelty = latest_plan?.novelty;
-  const papers = useMemo(() => noveltyToPaperRows(novelty), [novelty]);
+  const split = useMemo(() => splitPapersByStance(novelty), [novelty]);
   const stats = useMemo(() => noveltyStatCounts(novelty), [novelty]);
   const tag = novelty
     ? noveltyLabelTag(novelty.label)
@@ -296,7 +509,10 @@ function LiteratureStep({
 
   const patch = useMutation({
     mutationFn: () =>
-      api.patchExperiment(experimentId, { hypothesis: hypothesis.trim(), domain: experiment.domain }),
+      api.patchExperiment(experimentId, {
+        hypothesis: hypothesis.trim(),
+        domain: experiment.domain,
+      }),
     onSuccess: () => {
       setEditing(false);
       void qc.invalidateQueries({ queryKey: ["experiment", experimentId] });
@@ -308,8 +524,7 @@ function LiteratureStep({
   const noveltyRun = agent_runs.find((r) => r.agent_name === "novelty");
 
   return (
-    <div className="mx-auto max-w-[1100px] px-8 py-7">
-      {/* Page header */}
+    <div className="mx-auto max-w-[1100px] px-8 py-7 pb-28">
       <div className="fu mb-5 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="mb-1 text-[9px] font-bold uppercase tracking-wider text-fu-t4">
@@ -334,7 +549,6 @@ function LiteratureStep({
         </div>
       </div>
 
-      {/* Hypothesis card */}
       <div className="fu-card mb-4 border-[1.5px] border-black">
         <div
           className="flex items-center justify-between border-b bg-[#FAFAF8] px-4 py-3"
@@ -387,7 +601,6 @@ function LiteratureStep({
         </div>
       </div>
 
-      {/* Loading state */}
       {running && noveltyRun?.status !== "SUCCEEDED" && (
         <div className="fu-card mb-4 p-6 text-center text-sm text-fu-t3">
           <div className="fu-spin mx-auto mb-2 h-6 w-6 rounded-full border-2 border-fu-border border-t-black" />
@@ -397,7 +610,8 @@ function LiteratureStep({
 
       {novelty && (
         <div className="grid gap-3">
-          {/* Novelty card */}
+          <VerificationGraph novelty={novelty} />
+
           <div className="fu-card">
             <div className="border-b px-4 py-3" style={{ borderColor: "var(--fu-border)" }}>
               <span className="text-[9px] font-bold uppercase tracking-wider text-fu-t4">
@@ -412,7 +626,6 @@ function LiteratureStep({
               <SegBar scorePct={scorePct} />
               <p className="text-[11px] leading-snug text-fu-t3">{novelty.rationale}</p>
 
-              {/* Stat tiles */}
               {stats.papers > 0 && (
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <div className="rounded-md border border-fu-border bg-[#FAFAF8] px-3 py-2.5">
@@ -434,14 +647,13 @@ function LiteratureStep({
             </div>
           </div>
 
-          {/* Papers card */}
           <div className="fu-card">
             <div
               className="flex items-center justify-between border-b px-4 py-3"
               style={{ borderColor: "var(--fu-border)" }}
             >
               <span className="text-[9px] font-bold uppercase tracking-wider text-fu-t4">
-                Matched papers
+                Evidence split
               </span>
               <button
                 type="button"
@@ -450,45 +662,60 @@ function LiteratureStep({
                 View all →
               </button>
             </div>
-            <div className="flex flex-col p-2">
-              {papers.map((p, i) => (
-                <div key={i} className="fu-paper-row">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="flex-1 text-[11px] font-medium leading-snug text-fu-t2">{p.title}</p>
-                    <span
-                      className="shrink-0 font-mono text-xs font-bold"
-                      style={{ color: p.matchColor }}
-                    >
-                      {p.matchPct}%
-                    </span>
-                  </div>
-                  {p.source && (
-                    <div className="mt-0.5 text-[9px] text-fu-t4">{p.source}</div>
-                  )}
-                  {p.summary && (
-                    <p className="mt-1 text-[10px] leading-snug text-fu-t3">{p.summary}</p>
-                  )}
-                  {p.url && (
-                    <a
-                      href={p.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-1 inline-block text-[9px] text-fu-t3 underline"
-                    >
-                      Open source →
-                    </a>
-                  )}
+            <div className="grid gap-3.5 p-4 lg:grid-cols-2">
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <span
+                    className="text-[10px] font-bold uppercase tracking-[.1em]"
+                    style={{ color: "var(--fu-green)" }}
+                  >
+                    Supporting mechanism
+                  </span>
+                  <span className="font-mono text-[10px] text-fu-t4">
+                    {split.supporting.length}
+                  </span>
                 </div>
-              ))}
-              {papers.length === 0 && (
-                <p className="p-2 text-xs text-fu-t4">No references returned yet.</p>
-              )}
+                {split.supporting.length === 0 && (
+                  <p className="text-[10px] text-fu-t4">No supporting papers.</p>
+                )}
+                {split.supporting.map((p, i) => (
+                  <PaperRow key={`s-${i}`} p={p} />
+                ))}
+              </div>
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <span
+                    className="text-[10px] font-bold uppercase tracking-[.1em]"
+                    style={{ color: "var(--fu-red)" }}
+                  >
+                    Contradicting evidence
+                  </span>
+                  <span className="font-mono text-[10px] text-fu-t4">
+                    {split.contradicting.length}
+                  </span>
+                </div>
+                {split.contradicting.length === 0 && (
+                  <p className="text-[10px] text-fu-t4">No contradicting papers.</p>
+                )}
+                {split.contradicting.map((p, i) => (
+                  <PaperRow key={`c-${i}`} p={p} contradicting />
+                ))}
+              </div>
             </div>
+            {split.neutral.length > 0 && (
+              <div className="border-t px-4 py-3" style={{ borderColor: "var(--fu-border)" }}>
+                <div className="mb-2 text-[10px] font-bold uppercase tracking-[.1em] text-fu-t4">
+                  Neutral / unclassified
+                </div>
+                {split.neutral.map((p, i) => (
+                  <PaperRow key={`n-${i}`} p={p} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Action bar */}
       <div className="fu-action-bar mt-8">
         <Link
           to={`/workspace/${experimentId}/hypothesis`}
@@ -502,7 +729,7 @@ function LiteratureStep({
             type="button"
             onClick={() =>
               navigateTo(
-                `/workspace/${experimentId}/planning`,
+                `/workspace/${experimentId}/planning/${DEFAULT_PLANNING_TAB}`,
                 "Loading experiment planning…",
               )
             }
@@ -520,24 +747,43 @@ function LiteratureStep({
 // PlanningStep
 // ---------------------------------------------------------------------------
 
+type ChatMsg = { role: "user" | "ai"; text: string };
+
+function aiReplyFor(input: string): string {
+  const lower = input.toLowerCase();
+  if (lower.includes("replicate") || lower.includes("power") || lower.includes("n="))
+    return "Increase biological replicates to n=6 per condition. That improves power for a 15 percentage point delta and adds about two bench days.";
+  if (lower.includes("control"))
+    return "Add untreated culture, a vehicle/standard control, and a handling control. Keep them in the same batch to avoid batch effects.";
+  if (lower.includes("safety") || lower.includes("ln2") || lower.includes("hazard"))
+    return "Add PPE notes, hazardous-material handling checks, and a post-procedure validation step before readout.";
+  if (lower.includes("budget") || lower.includes("cheap") || lower.includes("cost"))
+    return "Use existing core-facility resources and mark owned consumables as in-lab. The Budget tab will remove those costs from purchasing.";
+  return "I would update the protocol by adding a short decision note, then preserve the current controls so the comparison remains interpretable.";
+}
+
 function PlanningStep({
   data,
   experimentId,
   qc,
   toast,
-  navigateTo,
+  tab,
 }: {
-  data: import("../api/types").ExperimentDetailResponse;
+  data: ExperimentDetailResponse;
   experimentId: string;
   qc: ReturnType<typeof useQueryClient>;
   toast: (m: string) => void;
-  navigateTo: (path: string, msg?: string) => void;
+  tab: PlanningTab;
 }) {
+  const navigate = useNavigate();
   const { latest_plan, experiment } = data;
-  const [tab, setTab] = useState<"protocol" | "materials" | "budget" | "timeline">("protocol");
   const protocol = latest_plan?.protocol;
   const materials = latest_plan?.materials;
   const timeline = latest_plan?.timeline;
+
+  function setTab(next: PlanningTab) {
+    navigate(`/workspace/${experimentId}/planning/${next}`);
+  }
 
   const patchPlan = useMutation({
     mutationFn: (body: import("../api/types").PlanPatchRequest) =>
@@ -545,15 +791,28 @@ function PlanningStep({
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["experiment", experimentId] }),
   });
 
-  const budgetTotal = materials?.budget_total;
   const running = experiment.status === "RUNNING" || experiment.status === "QUEUED";
 
-  // Materials include/exclude state
+  // Materials include/exclude state — initialise from `selected` flag if the
+  // backend provided one, otherwise everything is included.
+  const materialsItemsRef = materials?.line_items;
   const [excluded, setExcluded] = useState<Set<number>>(new Set());
+  const excludedSeededRef = useRef(false);
+  useEffect(() => {
+    if (excludedSeededRef.current) return;
+    if (!materialsItemsRef) return;
+    const initial = new Set<number>();
+    materialsItemsRef.forEach((li, i) => {
+      if (li.selected === false) initial.add(i);
+    });
+    setExcluded(initial);
+    excludedSeededRef.current = true;
+  }, [materialsItemsRef]);
   function toggleExclude(i: number) {
     setExcluded((prev) => {
       const next = new Set(prev);
-      next.has(i) ? next.delete(i) : next.add(i);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
       return next;
     });
   }
@@ -561,6 +820,9 @@ function PlanningStep({
   const includedTotal = items
     .filter((_, i) => !excluded.has(i))
     .reduce((s, li) => s + (li.unit_price ?? 0) * (li.quantity ?? 1), 0);
+
+  // Hero number = sum of selected items, falls back to backend total
+  const budgetTotal = items.length > 0 ? includedTotal : materials?.budget_total;
 
   // Protocol inline editing
   const [editingStepIdx, setEditingStepIdx] = useState<number | null>(null);
@@ -586,7 +848,6 @@ function PlanningStep({
     setEditingStepIdx(null);
     toast("Step saved.");
   }
-
   function addStep() {
     if (!protocol) return;
     const newStep: ProtocolStep = {
@@ -607,13 +868,69 @@ function PlanningStep({
     toast("Step added.");
   }
 
+  // Protocol AI chat
+  const [chatHistory, setChatHistory] = useState<ChatMsg[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const chatScrollRef = useRef<HTMLDivElement | null>(null);
+  function sendChat() {
+    const v = chatInput.trim();
+    if (!v) return;
+    setChatInput("");
+    setChatHistory((prev) => [...prev, { role: "user", text: v }]);
+    setTimeout(() => {
+      setChatHistory((prev) => [...prev, { role: "ai", text: aiReplyFor(v) }]);
+    }, 450);
+  }
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [chatHistory]);
+
+  // Budget — Change supplier rotation
+  function changeSupplier(idx: number) {
+    const li = items[idx];
+    if (!materials || !li || !li.options || li.options.length < 2) return;
+    const currentLabel = `${li.supplier ?? ""} ${li.currency}${li.unit_price ?? 0}`.trim();
+    const optList = li.options;
+    const currentPos = Math.max(0, optList.indexOf(currentLabel));
+    const nextLabel = optList[(currentPos + 1) % optList.length];
+    const parsed = parseSupplierOption(nextLabel, li.currency);
+    if (!parsed) return;
+    const next: MaterialLineItem = {
+      ...li,
+      supplier: parsed.supplier,
+      unit_price: parsed.price,
+      currency: parsed.currency,
+    };
+    const nextItems = items.map((m, i) => (i === idx ? next : m));
+    const nextMaterials: MaterialsResult = {
+      ...materials,
+      line_items: nextItems,
+      budget_total: nextItems.reduce(
+        (s, m) => s + (m.unit_price ?? 0) * (m.quantity ?? 1),
+        0,
+      ),
+    };
+    patchPlan.mutate({
+      materials: nextMaterials as unknown as Record<string, unknown>,
+    });
+    toast(`Supplier → ${parsed.supplier}`);
+  }
+
   // Timeline
   const phases = timeline?.phases ?? [];
-  const totalDays = timeline?.critical_path_days ?? phases.reduce((s, p) => s + p.duration_days, 0);
+  const totalDays =
+    timeline?.critical_path_days ??
+    phases.reduce((s, p) => s + p.duration_days, 0);
+  const dayTicks = useMemo(() => buildDayTicks(totalDays), [totalDays]);
+  const milestones = timeline?.milestones ?? [];
+  const [selectedPhaseIdx, setSelectedPhaseIdx] = useState<number | null>(null);
+  const selectedPhase =
+    selectedPhaseIdx != null ? phases[selectedPhaseIdx] ?? null : null;
 
   return (
-    <div className="mx-auto max-w-[1160px] px-8 py-7">
-      {/* Header */}
+    <div className="mx-auto max-w-[1160px] px-8 py-7 pb-28">
       <div className="fu mb-5 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="mb-1 text-[9px] font-bold uppercase tracking-wider text-fu-t4">
@@ -645,36 +962,25 @@ function PlanningStep({
         </div>
       )}
 
-      {/* Single workbench card */}
-      <div className="fu-card border-[1.5px] border-black overflow-visible">
-        {/* Tabs header */}
+      <div className="fu-card overflow-visible border-[1.5px] border-black">
         <div
           className="flex items-center gap-1 border-b bg-[#FAFAF8] px-3.5 py-2.5"
           style={{ borderColor: "var(--fu-border)" }}
         >
-          {(
-            [
-              ["protocol", "Protocol"],
-              ["materials", "Materials"],
-              ["budget", "Budget"],
-              ["timeline", "Timeline"],
-            ] as const
-          ).map(([id, label]) => (
+          {PLANNING_TABS.map((id) => (
             <button
               key={id}
               type="button"
               onClick={() => setTab(id)}
               className={`fu-tab ${tab === id ? "active" : ""}`}
             >
-              {label}
+              {id}
             </button>
           ))}
         </div>
 
-        {/* Protocol panel */}
         {tab === "protocol" && (
-          <div className="flex min-h-0 flex-col" style={{ maxHeight: 520 }}>
-            {/* Sub-header */}
+          <div className="flex min-h-0 flex-col" style={{ maxHeight: 620 }}>
             <div
               className="flex items-center justify-between border-b px-4 py-3"
               style={{ borderColor: "var(--fu-border)" }}
@@ -697,114 +1003,177 @@ function PlanningStep({
                 disabled={patchPlan.isPending || !protocol}
                 className="flex items-center gap-1.5 rounded-md border border-fu-border bg-white px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-fu-t3 transition-colors hover:border-black hover:text-black disabled:opacity-40"
               >
-                <svg
-                  width="10"
-                  height="10"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  viewBox="0 0 24 24"
-                >
+                <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
                 Add step
               </button>
             </div>
 
-            {/* Steps list */}
             <div className="flex-1 overflow-y-auto px-4 py-3">
               <div className="flex flex-col gap-[7px]">
-                {steps.map((s, i) => (
-                  <div
-                    key={i}
-                    className="group relative rounded-lg border border-fu-border bg-white px-3 py-2.5 transition-colors hover:border-[#aaa]"
-                  >
-                    {editingStepIdx === i ? (
-                      <div>
-                        <textarea
-                          value={editingText}
-                          onChange={(e) => setEditingText(e.target.value)}
-                          rows={3}
-                          className="w-full rounded border border-fu-border bg-[#F8F8F4] p-2 text-xs"
-                          autoFocus
-                        />
-                        <div className="mt-1.5 flex gap-1.5">
+                {steps.map((s, i) => {
+                  const protoUrl = (s.citations ?? []).find((c) => c.includes("protocols.io"));
+                  return (
+                    <div
+                      key={i}
+                      className="group relative rounded-lg border border-fu-border bg-white px-3 py-2.5 transition-colors hover:border-[#aaa]"
+                    >
+                      {editingStepIdx === i ? (
+                        <div>
+                          <textarea
+                            value={editingText}
+                            onChange={(e) => setEditingText(e.target.value)}
+                            rows={3}
+                            className="w-full rounded border border-fu-border bg-[#F8F8F4] p-2 text-xs"
+                            autoFocus
+                          />
+                          <div className="mt-1.5 flex gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => saveEditStep(i)}
+                              disabled={patchPlan.isPending}
+                              className="rounded bg-black px-2.5 py-1 text-[9px] font-bold uppercase text-white disabled:opacity-50"
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              onClick={cancelEditStep}
+                              className="rounded border border-fu-border px-2.5 py-1 text-[9px] font-bold uppercase text-fu-t3"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-start gap-2.5">
+                          <div className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded bg-black font-mono text-[9px] font-bold text-white">
+                            {s.step_number}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs leading-snug text-fu-t2">{s.action}</p>
+                            {protoUrl && (
+                              <div className="mt-1.5">
+                                <span className="source-badge">
+                                  <a href={protoUrl} target="_blank" rel="noreferrer">
+                                    via protocols.io
+                                  </a>
+                                </span>
+                              </div>
+                            )}
+                          </div>
                           <button
                             type="button"
-                            onClick={() => saveEditStep(i)}
-                            disabled={patchPlan.isPending}
-                            className="rounded bg-black px-2.5 py-1 text-[9px] font-bold uppercase text-white disabled:opacity-50"
+                            onClick={() => startEditStep(i, s.action)}
+                            className="shrink-0 text-fu-t4 opacity-0 transition-opacity group-hover:opacity-100"
                           >
-                            Save
-                          </button>
-                          <button
-                            type="button"
-                            onClick={cancelEditStep}
-                            className="rounded border border-fu-border px-2.5 py-1 text-[9px] font-bold uppercase text-fu-t3"
-                          >
-                            Cancel
+                            <PencilIcon />
                           </button>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-start gap-2.5">
-                        <div className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded bg-black font-mono text-[9px] font-bold text-white">
-                          {s.step_number}
-                        </div>
-                        <p className="flex-1 text-xs leading-snug text-fu-t2">{s.action}</p>
-                        <button
-                          type="button"
-                          onClick={() => startEditStep(i, s.action)}
-                          className="shrink-0 text-fu-t4 opacity-0 transition-opacity group-hover:opacity-100"
-                        >
-                          <PencilIcon />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {steps.length === 0 && (
-                  <p className="text-xs text-fu-t4">No protocol steps yet.</p>
-                )}
+                      )}
+                    </div>
+                  );
+                })}
+                {steps.length === 0 && <p className="text-xs text-fu-t4">No protocol steps yet.</p>}
               </div>
             </div>
 
-            {/* AI chat stub */}
             <div
               className="shrink-0 border-t"
-              style={{ borderColor: "var(--fu-border)", background: "#FAFAF8", borderTopWidth: 1.5 }}
+              style={{
+                borderColor: "var(--fu-border)",
+                background: "#FAFAF8",
+                borderTopWidth: 1.5,
+              }}
             >
               <div className="flex items-center gap-2 px-4 py-2.5">
                 <div className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded bg-black">
-                  <svg
-                    width="10"
-                    height="10"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg width="10" height="10" fill="none" stroke="white" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
                 </div>
                 <span className="text-[9px] font-bold uppercase tracking-[.1em]">
                   AI Protocol Assistant
                 </span>
-                <span className="ml-auto rounded border border-fu-border px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider text-fu-t4">
-                  Backend pending
+                <span
+                  className="ml-auto rounded border px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider"
+                  style={
+                    chatHistory.length > 0
+                      ? {
+                          background: "rgba(0,179,65,.08)",
+                          color: "var(--fu-green)",
+                          borderColor: "rgba(0,179,65,.25)",
+                        }
+                      : {
+                          color: "var(--fu-t4)",
+                          borderColor: "var(--fu-border)",
+                        }
+                  }
+                >
+                  {chatHistory.length > 0 ? "Live response" : "Ready"}
                 </span>
               </div>
+
+              {chatHistory.length > 0 && (
+                <div
+                  ref={chatScrollRef}
+                  className="mx-4 mb-2 flex max-h-[180px] flex-col gap-2 overflow-y-auto rounded-md bg-white p-2.5"
+                  style={{ border: "1px solid var(--fu-border)" }}
+                >
+                  {chatHistory.map((m, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-1.5"
+                      style={{ flexDirection: m.role === "user" ? "row-reverse" : "row" }}
+                    >
+                      <div
+                        className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded"
+                        style={{ background: m.role === "user" ? "#000" : "var(--fu-border)" }}
+                      >
+                        {m.role === "user" ? (
+                          <svg width="9" height="9" fill="white" viewBox="0 0 24 24">
+                            <circle cx="12" cy="8" r="4" />
+                            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                          </svg>
+                        ) : (
+                          <svg width="9" height="9" fill="none" stroke="#555" strokeWidth="2.2" viewBox="0 0 24 24">
+                            <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          </svg>
+                        )}
+                      </div>
+                      <div
+                        className="rounded-md px-2.5 py-1.5 text-[11px] leading-snug"
+                        style={{
+                          maxWidth: "86%",
+                          background: m.role === "user" ? "#000" : "#fff",
+                          color: m.role === "user" ? "#fff" : "var(--fu-t2)",
+                          border: "1px solid var(--fu-border)",
+                        }}
+                      >
+                        {m.text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="flex gap-2 px-4 pb-3">
                 <input
                   type="text"
-                  disabled
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") sendChat();
+                  }}
                   placeholder="Refine steps, add controls, check safety, request replicates…"
-                  className="flex-1 cursor-not-allowed rounded-md border border-fu-border px-3 py-2 text-[11px] text-fu-t4 opacity-60"
+                  className="flex-1 rounded-md border border-fu-border bg-white px-3 py-2 text-[11px] text-fu-text outline-none focus:border-black"
                 />
                 <button
                   type="button"
-                  disabled
-                  className="rounded-md bg-black px-4 py-2 text-[9px] font-bold uppercase tracking-[.1em] text-white opacity-40"
+                  onClick={sendChat}
+                  disabled={!chatInput.trim()}
+                  className="rounded-md bg-black px-4 py-2 text-[9px] font-bold uppercase tracking-[.1em] text-white disabled:opacity-40"
                 >
                   Send
                 </button>
@@ -813,7 +1182,6 @@ function PlanningStep({
           </div>
         )}
 
-        {/* Materials panel */}
         {tab === "materials" && (
           <div className="p-4">
             <div className="mb-4 flex items-start justify-between gap-4">
@@ -829,104 +1197,79 @@ function PlanningStep({
                 {items.length - excluded.size} / {items.length}
               </div>
             </div>
-            <div className="flex flex-col gap-1.5">
-              {items.map((li, i) => (
-                <label
-                  key={i}
-                  className={`flex cursor-pointer items-center gap-3 rounded-md border px-3 py-2.5 transition-opacity ${excluded.has(i) ? "border-fu-border opacity-50" : "border-fu-border hover:border-[#aaa]"}`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => toggleExclude(i)}
-                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border-[1.5px] ${excluded.has(i) ? "border-[#ccc] bg-white" : "border-black bg-black"}`}
-                  >
-                    {!excluded.has(i) && (
-                      <svg
-                        width="8"
-                        height="8"
-                        fill="none"
-                        stroke="white"
-                        strokeWidth="2.5"
-                        viewBox="0 0 24 24"
-                      >
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    )}
-                  </button>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs font-medium text-fu-t2">{li.name}</span>
-                    {li.supplier && (
-                      <span className="ml-2 text-[9px] text-fu-t4">{li.supplier}</span>
-                    )}
-                  </div>
-                  <div className="shrink-0 text-right">
-                    {li.unit_price != null ? (
-                      <span className="font-mono text-[11px]">
-                        {li.currency} {(li.unit_price * (li.quantity ?? 1)).toLocaleString()}
-                      </span>
-                    ) : (
-                      <span className="text-[10px] text-fu-t4">—</span>
-                    )}
-                    {excluded.has(i) && (
-                      <div className="text-[9px] uppercase tracking-wider text-fu-t4">In lab</div>
-                    )}
-                  </div>
-                </label>
-              ))}
-              {items.length === 0 && (
-                <p className="py-4 text-center text-xs text-fu-t4">No materials yet.</p>
-              )}
-            </div>
+
+            <MaterialsCategoryGrid
+              materials={materials}
+              excluded={excluded}
+              toggleExclude={toggleExclude}
+            />
           </div>
         )}
 
-        {/* Budget panel */}
         {tab === "budget" && (
           <div className="p-4">
             <div className="grid gap-3 lg:grid-cols-[1.35fr_0.65fr]">
-              {/* Line items */}
               <div>
                 <div className="mb-2.5 text-[9px] font-bold uppercase tracking-wider text-fu-t4">
                   Purchasing plan
                 </div>
                 <div className="flex flex-col gap-2">
-                  {items.map((li, i) => (
-                    <div
-                      key={i}
-                      className={`flex items-center gap-2 rounded-md border border-fu-border px-3 py-2 transition-opacity ${excluded.has(i) ? "opacity-40" : ""}`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-medium text-fu-t2">{li.name}</div>
-                        {li.supplier && (
-                          <div className="text-[9px] text-fu-t4">{li.supplier}</div>
-                        )}
+                  {items.map((li, i) => {
+                    const subline = [li.supplier, li.pack_size ?? li.quantity?.toString(), li.catalog_number]
+                      .filter(Boolean)
+                      .join(" · ");
+                    const canChange = (li.options?.length ?? 0) >= 2;
+                    return (
+                      <div
+                        key={i}
+                        className={`flex flex-col gap-1.5 rounded-md border border-fu-border px-3 py-2.5 transition-opacity ${excluded.has(i) ? "opacity-40" : ""}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-medium text-fu-t2">{li.name}</div>
+                            {subline && <div className="text-[9px] text-fu-t4">{subline}</div>}
+                          </div>
+                          <span className="shrink-0 font-mono text-[11px] font-bold">
+                            {li.unit_price != null
+                              ? `${li.currency} ${(li.unit_price * (li.quantity ?? 1)).toLocaleString()}`
+                              : "—"}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {li.source_url && (
+                            <span className="source-badge">
+                              <a href={li.source_url} target="_blank" rel="noreferrer">
+                                supplier URL
+                              </a>
+                            </span>
+                          )}
+                          {canChange && (
+                            <button
+                              type="button"
+                              onClick={() => changeSupplier(i)}
+                              disabled={patchPlan.isPending}
+                              className="rounded border border-fu-border bg-white px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-fu-t3 transition-colors hover:border-black hover:text-black disabled:opacity-40"
+                            >
+                              Change supplier
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      {li.catalog_number && (
-                        <span className="shrink-0 font-mono text-[9px] text-fu-t4">
-                          {li.catalog_number}
-                        </span>
-                      )}
-                      <span className="shrink-0 font-mono text-[11px] font-bold">
-                        {li.unit_price != null
-                          ? `${li.currency} ${(li.unit_price * (li.quantity ?? 1)).toLocaleString()}`
-                          : "—"}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {items.length === 0 && (
                     <p className="py-4 text-center text-xs text-fu-t4">No budget items yet.</p>
                   )}
                 </div>
               </div>
 
-              {/* Budget model card */}
               <div className="fu-card border-[1.5px] border-black p-4">
                 <div className="mb-2 text-[9px] font-bold uppercase tracking-[.1em] text-fu-t4">
                   Budget model
                 </div>
                 <p className="mb-3 text-[12px] leading-snug text-fu-t2">
-                  Only items marked as needed are counted. In-lab items are excluded from
-                  the total.
+                  Only items marked as needed are counted. In-lab items are excluded from the
+                  total.
                 </p>
                 <div
                   className="flex justify-between border-t pt-2.5"
@@ -941,7 +1284,7 @@ function PlanningStep({
                   <span className="text-[12px] text-fu-t3">Personnel estimate</span>
                   <span className="font-mono text-[14px] font-bold text-fu-t4">TBD</span>
                 </div>
-                {(materials?.lead_time_risks ?? []).length > 0 && (
+                {(materials?.lead_time_risks ?? []).length > 0 ? (
                   <div className="mt-3 rounded-md border border-fu-border bg-[#FAFAF8] p-2.5">
                     <div className="mb-1 text-[10px] font-bold text-fu-text">Lead-time risks</div>
                     <ul className="space-y-0.5 text-[11px] text-fu-t3">
@@ -950,15 +1293,14 @@ function PlanningStep({
                       ))}
                     </ul>
                   </div>
-                )}
-                {(materials?.lead_time_risks ?? []).length === 0 && (
+                ) : (
                   <div className="mt-3 rounded-md border border-fu-border bg-[#FAFAF8] p-2.5">
                     <div className="mb-1 text-[10px] font-bold text-fu-text">
                       Cheapest acceptable default
                     </div>
                     <p className="text-[11px] leading-snug text-fu-t3">
-                      The budget starts with the lowest acceptable supplier, but preserves alternates
-                      for reliability.
+                      The budget starts with the lowest acceptable supplier, but preserves
+                      alternates for reliability.
                     </p>
                   </div>
                 )}
@@ -967,154 +1309,447 @@ function PlanningStep({
           </div>
         )}
 
-        {/* Timeline panel */}
         {tab === "timeline" && (
-          <div>
-            {/* Stats strip */}
-            <div
-              className="flex flex-wrap items-center justify-between gap-2.5 border-b bg-[#FAFAF8] px-4 py-3"
-              style={{ borderColor: "var(--fu-border)" }}
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex items-baseline gap-1.5">
-                  <span className="font-mono text-[22px] font-bold leading-none">{totalDays}</span>
-                  <span className="text-[10px] font-semibold text-fu-t3">days</span>
-                </div>
-                <div className="h-3.5 w-px bg-fu-border" />
-                <span className="text-[10px] text-fu-t3">{phases.length} phases</span>
-                {timeline?.parallelization_notes && (
-                  <>
-                    <div className="h-3.5 w-px bg-fu-border" />
-                    <span className="text-[10px] text-fu-t3">
-                      {timeline.parallelization_notes.slice(0, 60)}
-                    </span>
-                  </>
-                )}
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <div className="h-1 w-2.5 rounded-sm bg-fu-amber" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-fu-t4">
-                    Dependency
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="h-1 w-2.5 rounded-sm bg-black" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-fu-t4">
-                    Primary
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="h-1 w-2.5 rounded-sm bg-[#B4B4B0]" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-fu-t4">
-                    Support
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Gantt bars */}
-            <div className="overflow-x-auto p-4">
-              <div style={{ minWidth: 500 }}>
-                {phases.map((ph, i) => {
-                  const pct = totalDays > 0 ? (ph.duration_days / totalDays) * 100 : 0;
-                  const color = ph.depends_on.length > 0 ? "var(--fu-amber)" : "#000";
-                  const label = ph.parallelizable ? "Parallel" : ph.depends_on[0] ?? "Primary";
-                  return (
-                    <div key={i} className="mb-1.5 flex items-center gap-0">
-                      <div className="w-[130px] shrink-0 pr-2.5">
-                        <div className="text-[10px] font-bold leading-snug text-fu-text">
-                          {ph.name}
-                        </div>
-                        <div className="text-[9px] text-fu-t4">{label}</div>
-                      </div>
-                      <div className="relative h-[30px] flex-1">
-                        {/* Grid lines */}
-                        <div
-                          className="pointer-events-none absolute inset-0"
-                          style={{
-                            background:
-                              "repeating-linear-gradient(90deg,transparent,transparent calc(25% - 1px),#F0F0EC calc(25% - 1px),#F0F0EC 25%)",
-                          }}
-                        />
-                        {/* Phase bar */}
-                        <div
-                          title={`${ph.name}: ${ph.duration_days} days`}
-                          style={{
-                            position: "absolute",
-                            left: 0,
-                            width: `${pct}%`,
-                            top: 7,
-                            height: 16,
-                            background: color,
-                            borderRadius: 3,
-                            display: "flex",
-                            alignItems: "center",
-                            padding: "0 6px",
-                            minWidth: 28,
-                          }}
-                        >
-                          <span
-                            className="font-mono text-[8px] font-bold text-white"
-                            style={{ whiteSpace: "nowrap" }}
-                          >
-                            {ph.duration_days}d
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                {phases.length === 0 && (
-                  <p className="py-4 text-center text-xs text-fu-t4">No timeline yet.</p>
-                )}
-              </div>
-            </div>
-          </div>
+          <TimelineTab
+            phases={phases}
+            totalDays={totalDays}
+            milestones={milestones}
+            dayTicks={dayTicks}
+            parallelizationNotes={timeline?.parallelization_notes ?? null}
+            selectedPhaseIdx={selectedPhaseIdx}
+            selectedPhase={selectedPhase}
+            onSelectPhase={setSelectedPhaseIdx}
+          />
         )}
       </div>
 
-      {/* Action bar */}
-      <div className="fu-action-bar mt-8">
+      <div className="fu-action-bar fixed bottom-0 left-[196px] right-0 z-30">
         <Link
           to={`/workspace/${experimentId}/literature`}
           className="rounded-md border border-fu-border bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-wide text-fu-t3"
         >
           Back
         </Link>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              if (latest_plan) {
-                const blob = new Blob([JSON.stringify(latest_plan, null, 2)], {
-                  type: "application/json",
-                });
-                const a = document.createElement("a");
-                a.href = URL.createObjectURL(blob);
-                a.download = `plan-${experimentId.slice(0, 8)}.json`;
-                a.click();
-                URL.revokeObjectURL(a.href);
-                toast("Plan exported.");
-              }
-            }}
-            className="rounded-md border border-fu-border bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-wide text-fu-t3"
-          >
-            Export JSON
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              navigateTo(`/workspace/${experimentId}/summary`, "Loading summary…")
-            }
-            className="rounded-md bg-black px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-white"
-          >
-            Go to summary
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            window.print();
+            toast("PDF / print dialog opened.");
+          }}
+          className="rounded-md bg-black px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-white"
+        >
+          Export PDF / Print
+        </button>
       </div>
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Materials category grid
+// ---------------------------------------------------------------------------
+
+function MaterialsCategoryGrid({
+  materials,
+  excluded,
+  toggleExclude,
+}: {
+  materials: MaterialsResult | null | undefined;
+  excluded: Set<number>;
+  toggleExclude: (idx: number) => void;
+}) {
+  const grouped = useMemo(() => materialsByCategory(materials), [materials]);
+  const items = materials?.line_items ?? [];
+
+  if (items.length === 0) {
+    return (
+      <p className="py-4 text-center text-xs text-fu-t4">No materials yet.</p>
+    );
+  }
+
+  return (
+    <div className="grid gap-3 lg:grid-cols-2">
+      {MATERIAL_CATEGORY_ORDER.map((cat) => {
+        const rows = grouped[cat];
+        if (rows.length === 0) return null;
+        const display = materialCategoryDisplay(cat);
+        return (
+          <div key={cat} className="fu-card">
+            <div
+              className="border-b px-3.5 py-2.5"
+              style={{ borderColor: "var(--fu-border)" }}
+            >
+              <div className="text-[9px] font-bold uppercase tracking-[.1em] text-fu-text">
+                {display.label}
+              </div>
+              <p className="mt-0.5 text-[10px] leading-snug text-fu-t3">{display.note}</p>
+            </div>
+            <div className="flex flex-col gap-1 p-2">
+              {rows.map(({ item: li, index: i }) => {
+                const isExcluded = excluded.has(i);
+                return (
+                  <label
+                    key={i}
+                    className={`flex cursor-pointer items-center gap-2.5 rounded-md border px-2.5 py-2 transition-opacity ${isExcluded ? "border-fu-border opacity-50" : "border-fu-border hover:border-[#aaa]"}`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleExclude(i)}
+                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border-[1.5px] ${isExcluded ? "border-[#ccc] bg-white" : "border-black bg-black"}`}
+                    >
+                      {!isExcluded && (
+                        <svg width="8" height="8" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </button>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-medium leading-snug text-fu-t2">{li.name}</div>
+                      {li.supplier && (
+                        <div className="text-[9px] text-fu-t4">{li.supplier}</div>
+                      )}
+                    </div>
+                    <div className="shrink-0 text-right">
+                      {li.unit_price != null ? (
+                        <span className="font-mono text-[11px]">
+                          {li.currency} {(li.unit_price * (li.quantity ?? 1)).toLocaleString()}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-fu-t4">—</span>
+                      )}
+                      <div
+                        className="text-[9px] font-bold uppercase tracking-wider"
+                        style={{ color: isExcluded ? "var(--fu-t4)" : "var(--fu-green)" }}
+                      >
+                        {isExcluded ? "In lab" : "Need"}
+                      </div>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Timeline tab + Gantt
+// ---------------------------------------------------------------------------
+
+function TimelineTab({
+  phases,
+  totalDays,
+  milestones,
+  dayTicks,
+  parallelizationNotes,
+  selectedPhaseIdx,
+  selectedPhase,
+  onSelectPhase,
+}: {
+  phases: TimelinePhase[];
+  totalDays: number;
+  milestones: { day: number; label: string }[];
+  dayTicks: number[];
+  parallelizationNotes: string | null;
+  selectedPhaseIdx: number | null;
+  selectedPhase: TimelinePhase | null;
+  onSelectPhase: (idx: number | null) => void;
+}) {
+  const benchPhases = phases.filter((p) =>
+    /(bench|expansion|setup|run|treat|imaging|sampling|freeze|thaw)/i.test(p.name),
+  );
+  const analysisPhases = phases.filter((p) =>
+    /(analysis|report|review|decision|readout)/i.test(p.name),
+  );
+  const benchDays = benchPhases.reduce((s, p) => s + p.duration_days, 0);
+  const analysisDays = analysisPhases.reduce((s, p) => s + p.duration_days, 0);
+
+  const dateRange = useMemo(() => {
+    if (totalDays <= 0) return null;
+    const start = new Date();
+    const end = new Date(start.getTime() + totalDays * 86400000);
+    const fmt = (d: Date) =>
+      d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return `${fmt(start)} – ${fmt(end)}`;
+  }, [totalDays]);
+
+  return (
+    <div>
+      <div
+        className="flex flex-wrap items-center justify-between gap-2.5 border-b bg-[#FAFAF8] px-4 py-3"
+        style={{ borderColor: "var(--fu-border)" }}
+      >
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-mono text-[22px] font-bold leading-none">{totalDays}</span>
+            <span className="text-[10px] font-semibold text-fu-t3">days</span>
+          </div>
+          {dateRange && (
+            <>
+              <div className="h-3.5 w-px bg-fu-border" />
+              <span className="text-[10px] text-fu-t3">{dateRange}</span>
+            </>
+          )}
+          <div className="h-3.5 w-px bg-fu-border" />
+          <span className="text-[10px] text-fu-t3">{phases.length} phases</span>
+          {benchDays > 0 && (
+            <>
+              <div className="h-3.5 w-px bg-fu-border" />
+              <span className="text-[10px] text-fu-t3">
+                {benchDays}d bench · {analysisDays}d analysis
+              </span>
+            </>
+          )}
+          {parallelizationNotes && (
+            <>
+              <div className="h-3.5 w-px bg-fu-border" />
+              <span className="text-[10px] text-fu-t3">
+                {parallelizationNotes.slice(0, 80)}
+              </span>
+            </>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <div className="h-1 w-2.5 rounded-sm bg-fu-amber" />
+            <span className="text-[9px] font-bold uppercase tracking-wider text-fu-t4">
+              Dependency
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="h-1 w-2.5 rounded-sm bg-black" />
+            <span className="text-[9px] font-bold uppercase tracking-wider text-fu-t4">
+              Primary
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="h-1 w-2.5 rounded-sm bg-[#B4B4B0]" />
+            <span className="text-[9px] font-bold uppercase tracking-wider text-fu-t4">
+              Support
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto p-4">
+        <div style={{ minWidth: 640 }}>
+          <div className="mb-1.5 flex items-center gap-0">
+            <div className="w-[140px] shrink-0" />
+            <div className="relative h-[18px] flex-1">
+              {Array.from({ length: Math.max(1, Math.ceil(totalDays / 7)) }).map((_, w) => (
+                <div
+                  key={w}
+                  className="absolute font-mono text-[8px] font-bold uppercase tracking-[.1em] text-fu-t4"
+                  style={{ left: `${((w * 7) / Math.max(totalDays, 1)) * 100}%`, top: 2 }}
+                >
+                  W{w + 1}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-2 flex items-center gap-0">
+            <div className="w-[140px] shrink-0" />
+            <div className="relative h-[14px] flex-1">
+              {dayTicks.map((d) => {
+                const left = (d / Math.max(totalDays, 1)) * 100;
+                const isAmber = d === 4;
+                return (
+                  <div
+                    key={d}
+                    className="absolute font-mono text-[8px] font-bold"
+                    style={{
+                      left: `${left}%`,
+                      top: 0,
+                      transform: "translateX(-50%)",
+                      color: isAmber ? "var(--fu-amber)" : "var(--fu-t4)",
+                    }}
+                  >
+                    D{d}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {phases.map((ph, i) => {
+            const start = ph.start_day ?? 0;
+            const dur = ph.duration_days;
+            const leftPct = totalDays > 0 ? (start / totalDays) * 100 : 0;
+            const widthPct = totalDays > 0 ? (dur / totalDays) * 100 : 0;
+            const color = ph.depends_on.length > 0 ? "var(--fu-amber)" : "#000";
+            const subLabel = ph.parallelizable ? "Parallel" : ph.depends_on[0] ?? "Primary";
+            const active = selectedPhaseIdx === i;
+            return (
+              <div key={i} className="mb-1.5 flex items-center gap-0">
+                <button
+                  type="button"
+                  onClick={() => onSelectPhase(active ? null : i)}
+                  className="w-[140px] shrink-0 pr-2.5 text-left"
+                >
+                  <div className="text-[10px] font-bold leading-snug text-fu-text">{ph.name}</div>
+                  <div className="text-[9px] text-fu-t4">{subLabel}</div>
+                </button>
+                <div className="relative h-[30px] flex-1">
+                  <div
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      background:
+                        "repeating-linear-gradient(90deg,transparent,transparent calc(25% - 1px),#F0F0EC calc(25% - 1px),#F0F0EC 25%)",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => onSelectPhase(active ? null : i)}
+                    title={`${ph.name}: ${ph.duration_days} days`}
+                    style={{
+                      position: "absolute",
+                      left: `${leftPct}%`,
+                      width: `${widthPct}%`,
+                      top: 7,
+                      height: 16,
+                      background: color,
+                      borderRadius: 3,
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "0 6px",
+                      minWidth: 28,
+                      border: active ? "1.5px solid #000" : "none",
+                      boxShadow: active ? "0 0 0 2px rgba(0,0,0,.12)" : "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span
+                      className="font-mono text-[8px] font-bold text-white"
+                      style={{ whiteSpace: "nowrap" }}
+                    >
+                      {ph.duration_days}d
+                    </span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          {phases.length === 0 && (
+            <p className="py-4 text-center text-xs text-fu-t4">No timeline yet.</p>
+          )}
+
+          {milestones.length > 0 && (
+            <div className="mt-3 flex items-start gap-0">
+              <div className="w-[140px] shrink-0 pr-2.5 text-left">
+                <span className="text-[9px] font-bold uppercase tracking-[.1em] text-fu-t4">
+                  Milestones
+                </span>
+              </div>
+              <div className="relative h-[40px] flex-1">
+                {milestones.map((m, i) => {
+                  const left = (m.day / Math.max(totalDays, 1)) * 100;
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        position: "absolute",
+                        left: `${left}%`,
+                        transform: "translateX(-50%)",
+                        top: 0,
+                      }}
+                      className="flex flex-col items-center gap-1"
+                    >
+                      <div
+                        style={{
+                          width: 9,
+                          height: 9,
+                          background: "var(--fu-amber)",
+                          transform: "rotate(45deg)",
+                          borderRadius: 1,
+                        }}
+                      />
+                      <span
+                        className="font-mono text-[8px] font-bold uppercase tracking-wider text-fu-t3"
+                        style={{ whiteSpace: "nowrap" }}
+                      >
+                        {m.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {selectedPhase && selectedPhaseIdx != null && (
+        <div className="mx-4 mb-4">
+          <div
+            className="rounded-lg bg-[#FAFAF8] p-3.5"
+            style={{ border: "1.5px solid #000" }}
+          >
+            <div className="mb-1.5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    background: selectedPhase.depends_on.length > 0 ? "var(--fu-amber)" : "#000",
+                    transform: "rotate(45deg)",
+                    borderRadius: 2,
+                  }}
+                />
+                <span className="text-[12px] font-bold">{selectedPhase.name}</span>
+                <span className="font-mono text-[10px] text-fu-t4">
+                  {selectedPhase.start_day != null && selectedPhase.end_day != null
+                    ? `Day ${selectedPhase.start_day}–${selectedPhase.end_day}`
+                    : `${selectedPhase.duration_days}d`}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {(selectedPhase.owner || selectedPhase.status) && (
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[.06em] text-fu-t4">
+                    {[selectedPhase.owner, selectedPhase.status].filter(Boolean).join(" · ")}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => onSelectPhase(null)}
+                  className="border-0 bg-transparent text-[10px] text-fu-t4 hover:text-black"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <p className="text-[12px] leading-snug text-fu-t2">
+              {selectedPhase.detail ?? selectedPhase.notes ?? "No detail provided."}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function buildDayTicks(totalDays: number): number[] {
+  if (totalDays <= 0) return [0];
+  const candidates = [0, 4, 7, 10, 14, 21, 28, 35, 42];
+  const out = candidates.filter((d) => d <= totalDays);
+  if (!out.includes(totalDays)) out.push(totalDays);
+  return out;
+}
+
+function parseSupplierOption(
+  label: string,
+  fallbackCurrency: string,
+): { supplier: string; price: number; currency: string } | null {
+  const m = label.match(/^(.+?)\s+([A-Z]{3})\s*([0-9]+(?:\.[0-9]+)?)$/);
+  if (!m) return null;
+  return {
+    supplier: m[1].trim(),
+    currency: m[2] || fallbackCurrency,
+    price: Number(m[3]),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -1128,7 +1763,7 @@ function SummaryStep({
   toast,
 }: {
   experimentId: string;
-  data: import("../api/types").ExperimentDetailResponse;
+  data: ExperimentDetailResponse;
   qc: ReturnType<typeof useQueryClient>;
   toast: (m: string) => void;
 }) {
@@ -1140,6 +1775,7 @@ function SummaryStep({
   const validation = latest_plan?.validation;
 
   const readinessPct = syn ? Math.round(syn.overall_confidence * 100) : null;
+  const conflicts = useMemo(() => synthesisConflicts(syn), [syn]);
 
   const [notes, setNotes] = useState("");
   const [includeReviews, setIncludeReviews] = useState(true);
@@ -1188,16 +1824,9 @@ function SummaryStep({
     });
   }
 
-  function exportJson() {
-    const blob = new Blob([JSON.stringify({ experiment, latest_plan }, null, 2)], {
-      type: "application/json",
-    });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `experiment-${experimentId.slice(0, 8)}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    toast("Summary exported.");
+  function exportPdfOrPrint() {
+    window.print();
+    toast("PDF / print dialog opened.");
   }
 
   const noveltyTag = novelty ? noveltyLabelTag(novelty.label) : null;
@@ -1206,8 +1835,7 @@ function SummaryStep({
     (timeline?.phases ?? []).reduce((s, p) => s + p.duration_days, 0);
 
   return (
-    <div className="mx-auto max-w-[1100px] px-8 py-7">
-      {/* Page header */}
+    <div className="mx-auto max-w-[1100px] px-8 py-7 pb-28">
       <div className="fu mb-5 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="mb-1 text-[9px] font-bold uppercase tracking-wider text-fu-t4">
@@ -1215,8 +1843,8 @@ function SummaryStep({
           </div>
           <h2 className="font-mono text-[22px] font-bold tracking-tight">Summary</h2>
           <p className="mt-1 text-xs text-fu-t3">
-            Final runnable experiment package: literature signal, protocol, materials, budget,
-            and timeline.
+            Final runnable experiment package: literature signal, protocol, materials, budget, and
+            timeline.
           </p>
         </div>
         {readinessPct != null && (
@@ -1234,10 +1862,8 @@ function SummaryStep({
         )}
       </div>
 
-      {/* Decision + At a Glance 2-col */}
       {(syn || noveltyTag) && (
         <div className="mb-4 grid gap-3.5 lg:grid-cols-[1.2fr_0.8fr]">
-          {/* Experiment Decision */}
           <div className="fu-card border-[1.5px] border-black p-5">
             <div className="mb-2.5 text-[9px] font-bold uppercase tracking-wider text-fu-t4">
               Experiment decision
@@ -1250,16 +1876,8 @@ function SummaryStep({
                 <p className="text-[12px] leading-relaxed text-fu-t2">{syn.summary}</p>
               </>
             )}
-            {(syn?.cross_section_conflicts ?? []).length > 0 && (
-              <ul className="mt-3 space-y-1 text-xs text-fu-amber">
-                {syn!.cross_section_conflicts.map((c, i) => (
-                  <li key={i}>⚠ {c}</li>
-                ))}
-              </ul>
-            )}
           </div>
 
-          {/* At a Glance */}
           <div className="fu-card p-5">
             <div className="mb-3 text-[9px] font-bold uppercase tracking-wider text-fu-t4">
               At a glance
@@ -1298,7 +1916,47 @@ function SummaryStep({
         </div>
       )}
 
-      {/* Checklist */}
+      {conflicts.length > 0 && (
+        <div
+          className="fu-card mb-4"
+          style={{ borderLeft: "3px solid var(--fu-amber)" }}
+        >
+          <div
+            className="flex items-center justify-between border-b px-4 py-3.5"
+            style={{ borderColor: "var(--fu-border)" }}
+          >
+            <span className="text-[9px] font-bold uppercase tracking-[.12em] text-fu-t4">
+              Synthesis Conflict List
+            </span>
+            <span className="font-mono text-[10px] font-bold" style={{ color: "var(--fu-amber)" }}>
+              {conflicts.length} open
+            </span>
+          </div>
+          <div
+            className="grid"
+            style={{ gridTemplateColumns: `repeat(${Math.min(conflicts.length, 3)}, 1fr)` }}
+          >
+            {conflicts.map((c, i) => (
+              <div
+                key={i}
+                className="px-4 py-3.5"
+                style={{
+                  borderRight:
+                    i < Math.min(conflicts.length, 3) - 1
+                      ? "1px solid var(--fu-border)"
+                      : "none",
+                }}
+              >
+                <div className="text-[11px] font-bold leading-snug text-fu-text">{c.title}</div>
+                {c.detail && (
+                  <p className="mt-1 text-[10px] leading-snug text-fu-t3">{c.detail}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="fu-card mb-4 p-5">
         <div className="mb-3 text-[9px] font-bold uppercase tracking-wider text-fu-t4">
           Checklist
@@ -1312,14 +1970,7 @@ function SummaryStep({
             }`}
           >
             {chk && (
-              <svg
-                width="8"
-                height="8"
-                fill="none"
-                stroke="white"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
+              <svg width="8" height="8" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             )}
@@ -1328,7 +1979,6 @@ function SummaryStep({
         </label>
       </div>
 
-      {/* Regenerate */}
       <div className="fu-card mb-4 p-5">
         <h3 className="mb-2.5 text-[9px] font-bold uppercase tracking-wider text-fu-t4">
           Regenerate with corrections
@@ -1358,7 +2008,6 @@ function SummaryStep({
         </button>
       </div>
 
-      {/* Expert review */}
       <div className="fu-card mb-6 p-5">
         <h3 className="mb-3 text-[9px] font-bold uppercase tracking-wider text-fu-t4">
           Expert review
@@ -1371,13 +2020,11 @@ function SummaryStep({
               onChange={(e) => setSection(e.target.value as ReviewCreateRequest["section"])}
               className="mt-1 w-full rounded border border-fu-border px-2 py-1 text-xs"
             >
-              {(["novelty", "protocol", "materials", "timeline", "validation"] as const).map(
-                (s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ),
-              )}
+              {(["novelty", "protocol", "materials", "timeline", "validation"] as const).map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
             </select>
           </label>
           <label className="text-xs">
@@ -1428,32 +2075,20 @@ function SummaryStep({
         </ul>
       </div>
 
-      {/* Action bar */}
-      <div className="fu-action-bar">
+      <div className="fu-action-bar fixed bottom-0 left-[196px] right-0 z-30">
         <Link
-          to={`/workspace/${experimentId}/planning`}
+          to={`/workspace/${experimentId}/planning/${DEFAULT_PLANNING_TAB}`}
           className="flex items-center gap-1.5 rounded-md border border-fu-border bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-wide text-fu-t3"
         >
           Back to planning
         </Link>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={exportJson}
-            className="rounded-md border border-fu-border bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-wide text-fu-t3"
-          >
-            Export JSON
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              toast("Summary saved as the final runnable plan.");
-            }}
-            className="flex items-center gap-2 rounded-md bg-black px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-white"
-          >
-            Save summary
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={exportPdfOrPrint}
+          className="rounded-md bg-black px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-white"
+        >
+          Export PDF / Print
+        </button>
       </div>
     </div>
   );

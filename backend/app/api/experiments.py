@@ -54,7 +54,21 @@ def list_experiments(db: Session = Depends(get_db)) -> List[ExperimentSummary]:
         .limit(50)
         .all()
     )
-    return [_to_summary(r) for r in rows]
+    out: list[ExperimentSummary] = []
+    for r in rows:
+        latest_plan = (
+            db.query(ExperimentPlan)
+            .filter(ExperimentPlan.experiment_id == r.id)
+            .order_by(ExperimentPlan.version.desc())
+            .first()
+        )
+        score: int | None = None
+        if latest_plan is not None and isinstance(latest_plan.novelty, dict):
+            conf = latest_plan.novelty.get("confidence")
+            if isinstance(conf, (int, float)):
+                score = int(round(float(conf) * 100))
+        out.append(_to_summary(r, novelty_score=score))
+    return out
 
 
 @router.get("/{experiment_id}", response_model=ExperimentDetailResponse)
@@ -238,7 +252,7 @@ def list_reviews(experiment_id: str, db: Session = Depends(get_db)) -> List[Revi
     ]
 
 
-def _to_summary(e: Experiment) -> ExperimentSummary:
+def _to_summary(e: Experiment, novelty_score: int | None = None) -> ExperimentSummary:
     return ExperimentSummary(
         id=e.id,
         hypothesis=e.hypothesis,
@@ -247,6 +261,7 @@ def _to_summary(e: Experiment) -> ExperimentSummary:
         error=e.error,
         created_at=e.created_at,
         updated_at=e.updated_at,
+        novelty_score=novelty_score,
     )
 
 

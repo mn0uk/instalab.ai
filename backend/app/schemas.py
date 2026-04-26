@@ -8,12 +8,20 @@ NoveltyLabel = Literal["NOT_FOUND", "SIMILAR_EXISTS", "EXACT_MATCH"]
 RunStatus = Literal["QUEUED", "RUNNING", "SUCCEEDED", "FAILED"]
 
 
+PaperStance = Literal["support", "contradict", "neutral"]
+VerificationState = Literal["tested", "assumed", "scope"]
+
+
 class Reference(BaseModel):
     title: str
     url: str
     source: str | None = None
     snippet: str | None = None
     relevance: float | None = None
+    stance: PaperStance | None = None
+    author: str | None = None
+    organism: str | None = None
+    citations: int | None = None
 
 
 class MatchedEntities(BaseModel):
@@ -30,12 +38,21 @@ class MatchedEntities(BaseModel):
     model_or_system: str = ""
 
 
+class VerificationNode(BaseModel):
+    """A single claim in the hypothesis verification graph (≤6 per result)."""
+
+    label: str
+    state: VerificationState
+    note: str = ""
+
+
 class NoveltyResult(BaseModel):
     label: NoveltyLabel
     confidence: float = 0.0
     rationale: str = ""
     references: list[Reference] = Field(default_factory=list)
     matched_entities: MatchedEntities = Field(default_factory=MatchedEntities)
+    verification_nodes: list[VerificationNode] = Field(default_factory=list)
 
 
 class ProtocolStep(BaseModel):
@@ -56,6 +73,16 @@ class ProtocolResult(BaseModel):
     citations: list[Reference] = Field(default_factory=list)
 
 
+MaterialCategory = Literal[
+    "bio",
+    "reagents",
+    "equipment",
+    "consumables",
+    "controls",
+    "safety",
+]
+
+
 class MaterialLineItem(BaseModel):
     name: str
     supplier: str | None = None
@@ -66,6 +93,9 @@ class MaterialLineItem(BaseModel):
     quantity: float | None = None
     notes: str | None = None
     source_url: str | None = None
+    category: MaterialCategory | None = None
+    options: list[str] = Field(default_factory=list)
+    selected: bool = True
 
 
 class MaterialsResult(BaseModel):
@@ -82,12 +112,25 @@ class TimelinePhase(BaseModel):
     depends_on: list[str] = Field(default_factory=list)
     parallelizable: bool = False
     notes: str | None = None
+    owner: str | None = None
+    status: str | None = None
+    detail: str | None = None
+    start_day: int | None = None
+    end_day: int | None = None
+
+
+class Milestone(BaseModel):
+    """A point-in-time marker rendered as a diamond on the Gantt chart."""
+
+    day: int
+    label: str
 
 
 class TimelineResult(BaseModel):
     phases: list[TimelinePhase] = Field(default_factory=list)
     critical_path_days: int = 0
     parallelization_notes: str | None = None
+    milestones: list[Milestone] = Field(default_factory=list)
 
 
 class ValidationResult(BaseModel):
@@ -98,9 +141,17 @@ class ValidationResult(BaseModel):
     standards_referenced: list[str] = Field(default_factory=list)
 
 
+class ConflictItem(BaseModel):
+    """Structured conflict surfaced in the Summary view's 3-cell grid."""
+
+    title: str
+    detail: str = ""
+
+
 class SynthesisResult(BaseModel):
     overall_confidence: float = 0.0
     cross_section_conflicts: list[str] = Field(default_factory=list)
+    conflicts: list[ConflictItem] = Field(default_factory=list)
     summary: str = ""
 
 
@@ -140,6 +191,7 @@ class ExperimentSummary(BaseModel):
     error: str | None
     created_at: datetime
     updated_at: datetime
+    novelty_score: int | None = None
 
 
 class AgentRunSummary(BaseModel):

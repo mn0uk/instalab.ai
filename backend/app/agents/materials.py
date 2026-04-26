@@ -44,11 +44,21 @@ Strategy:
 
 Output requirements (the host system enforces this schema):
 - `line_items`: each item has `name`, `supplier`, `catalog_number`, `pack_size`,
-  `unit_price`, `currency`, `quantity`, `notes`, `source_url`.
+  `unit_price`, `currency`, `quantity`, `notes`, `source_url`, `category`,
+  `options`, `selected`.
 - `source_url` MUST be a URL you actually fetched via `fetch_url_readable` or
   that appeared in `search_supplier_catalog` results. Never invent URLs.
 - `currency` should be one of "USD", "EUR", "GBP".
 - `quantity` is the count of the chosen pack size you would buy for the run.
+- `category` MUST be one of: "bio" (cells, organisms, biological samples),
+  "reagents" (chemicals, media, kits), "equipment" (instruments, rentals),
+  "consumables" (plasticware, tubes, plates), "controls" (assays, viability
+  reagents used as controls), "safety" (PPE, hazard supplies).
+- `options`: 2-3 alternate supplier offers for the SAME item, formatted as
+  "{supplier} {currency}{price}" (e.g. "Sigma-Aldrich USD120", "Thermo USD132").
+  The first entry must match the chosen `supplier`/`unit_price`. This drives
+  the UI's "Change supplier" rotation. Provide at least one alternate.
+- `selected`: true by default; the user can deselect items they already have.
 - `budget_total` is the sum of `unit_price * quantity` across line items where
   both are present; the host will recompute it if you leave it at 0.
 - `lead_time_risks`: short bullets for items likely to have long lead time

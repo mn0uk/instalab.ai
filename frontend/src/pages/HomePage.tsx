@@ -116,12 +116,12 @@ export default function HomePage() {
                   onChange={(e) => setDomain(e.target.value)}
                   className="cursor-pointer border-0 bg-transparent text-[10px] font-bold uppercase tracking-wider text-fu-t3 focus:outline-none"
                 >
-                  <option value="">Select domain</option>
-                  <option value="Cell Biology">Cell Biology</option>
-                  <option value="Diagnostics">Diagnostics</option>
-                  <option value="Gut Health">Gut Health</option>
-                  <option value="Climate Science">Climate Science</option>
-                  <option value="Neuroscience">Neuroscience</option>
+                  <option value="">SELECT DOMAIN</option>
+                  <option value="Cell Biology">CELL BIOLOGY</option>
+                  <option value="Diagnostics">DIAGNOSTICS</option>
+                  <option value="Gut Health">GUT HEALTH</option>
+                  <option value="Climate Science">CLIMATE SCIENCE</option>
+                  <option value="Neuroscience">NEUROSCIENCE</option>
                 </select>
               </div>
               <div className="flex items-center gap-2">

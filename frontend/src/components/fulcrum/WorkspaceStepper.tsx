@@ -1,13 +1,15 @@
 import { Fragment } from "react";
-import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
-import type { ExperimentDetailResponse } from "../../api/types";
+import { api } from "../../api/client";
 import {
   STEP_LABELS,
   WORKSPACE_STEPS,
   type WorkspaceStep,
   isStepAccessible,
   isStepDone,
+  parseWorkspaceStep,
 } from "../../lib/workspaceSteps";
 
 function CheckIcon() {
@@ -25,16 +27,30 @@ function CheckIcon() {
   );
 }
 
-export function WorkspaceStepper({
-  experimentId,
-  currentStep,
-  detail,
-}: {
-  experimentId: string;
-  currentStep: WorkspaceStep;
-  detail: ExperimentDetailResponse | undefined;
-}) {
+function deriveCurrentStep(
+  pathname: string,
+  stepParam: string | undefined,
+): WorkspaceStep {
+  const parsed = parseWorkspaceStep(stepParam);
+  if (parsed) return parsed;
+  if (pathname === "/" || pathname === "") return "hypothesis";
+  return "hypothesis";
+}
+
+export function WorkspaceStepper() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { experimentId, step: stepParam } = useParams();
+
+  const detailQuery = useQuery({
+    queryKey: ["experiment", experimentId],
+    queryFn: () => api.getExperiment(experimentId as string),
+    enabled: Boolean(experimentId),
+  });
+  const detail = detailQuery.data;
+
+  const currentStep = deriveCurrentStep(location.pathname, stepParam);
+  const hasExp = Boolean(experimentId);
 
   return (
     <div
@@ -43,10 +59,11 @@ export function WorkspaceStepper({
     >
       {WORKSPACE_STEPS.map((step, i) => {
         const n = i + 1;
-        const done = isStepDone(step, detail);
+        const done = hasExp ? isStepDone(step, detail) : false;
         const active = step === currentStep;
-        const accessible = isStepAccessible(step, detail);
-        const prevDone = i > 0 && isStepDone(WORKSPACE_STEPS[i - 1], detail);
+        const accessible = hasExp ? isStepAccessible(step, detail) : false;
+        const prevDone =
+          hasExp && i > 0 && isStepDone(WORKSPACE_STEPS[i - 1], detail);
 
         return (
           <Fragment key={step}>
@@ -66,12 +83,16 @@ export function WorkspaceStepper({
             )}
             <button
               type="button"
-              disabled={!accessible}
+              disabled={!hasExp || !accessible}
               onClick={() => {
-                if (accessible) navigate(`/workspace/${experimentId}/${step}`);
+                if (hasExp && accessible) {
+                  navigate(`/workspace/${experimentId}/${step}`);
+                }
               }}
               className={`flex shrink-0 items-center gap-1.5 rounded-md px-1 py-1 text-left transition-opacity ${
-                accessible ? "cursor-pointer hover:opacity-90" : "cursor-not-allowed opacity-40"
+                hasExp && accessible
+                  ? "cursor-pointer hover:opacity-90"
+                  : "cursor-not-allowed opacity-40"
               }`}
             >
               <div

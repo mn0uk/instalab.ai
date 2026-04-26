@@ -13,6 +13,10 @@ export default function App() {
         <Route path="/experiments" element={<ExperimentsListPage />} />
         <Route path="/workspace/:experimentId" element={<WorkspacePage />} />
         <Route path="/workspace/:experimentId/:step" element={<WorkspacePage />} />
+        <Route
+          path="/workspace/:experimentId/:step/:tab"
+          element={<WorkspacePage />}
+        />
       </Route>
     </Routes>
   );
