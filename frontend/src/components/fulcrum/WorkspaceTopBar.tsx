@@ -6,7 +6,7 @@ export function WorkspaceTopBar() {
     >
       <div>
         <div className="font-mono text-[12px] font-bold uppercase tracking-[.1em]">Your AI Lab Assistant</div>
-        <div className="text-[10px] italic text-fu-t4">Hypothesis to Experiment</div>
+        <div className="text-[10px] italic text-fu-t4">Plan less, discover more.</div>
       </div>
       <div className="flex items-center gap-2">
         <div
