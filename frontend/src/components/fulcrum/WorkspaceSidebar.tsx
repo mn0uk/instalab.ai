@@ -258,12 +258,12 @@ export function WorkspaceSidebar() {
         <div className="flex items-center gap-2 px-2 py-1.5">
           <div className="relative">
             <div className="flex h-[26px] w-[26px] items-center justify-center rounded-md bg-black font-mono text-[10px] font-bold text-white">
-              AM
+              LV
             </div>
             <div className="absolute -bottom-px -right-px h-[7px] w-[7px] rounded-full border-[1.5px] border-white bg-fu-green" />
           </div>
           <div>
-            <div className="text-[11px] font-semibold leading-snug">Dr. Alex Morgan</div>
+            <div className="text-[11px] font-semibold leading-snug">Dr. Lara Vehovec</div>
             <div className="text-[9px] text-fu-t4">Principal Scientist</div>
           </div>
         </div>
