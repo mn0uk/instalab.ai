@@ -95,6 +95,13 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 /* Inline loading overlay */
 #step-overlay{position:fixed;inset:0;background:rgba(240,240,236,.92);display:none;align-items:center;justify-content:center;z-index:100;flex-direction:column;gap:16px;}
 #step-overlay.show{display:flex;}
+.agent-panel{width:min(760px,calc(100vw - 48px));background:#fff;border:1.5px solid #000;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.12);overflow:hidden;}
+.agent-row{display:grid;grid-template-columns:22px 150px 1fr auto;gap:10px;align-items:start;padding:10px 14px;border-top:1px solid var(--border);transition:background .2s;}
+.agent-dot{width:11px;height:11px;border-radius:50%;border:1.5px solid #bbb;margin-top:3px;background:#fff;}
+.agent-row.active{background:#FAFAF8;}.agent-row.active .agent-dot{background:var(--amber);border-color:var(--amber);}
+.agent-row.done .agent-dot{background:#000;border-color:#000;}
+.agent-log{font-size:11px;color:var(--t3);line-height:1.45;}
+.source-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:#fff;font-size:8px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--t4);text-decoration:none;}
 
 /* Chk */
 .chk-box{width:16px;height:16px;border-radius:4px;border:1.5px solid #ccc;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0;background:#fff;}
@@ -124,14 +131,15 @@ button{cursor:pointer;font-family:'Space Grotesk',sans-serif;}
 
 <!-- STEP TRANSITION OVERLAY -->
 <div id="step-overlay">
-  <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
-    <svg class="spin" width="28" height="28" fill="none" stroke="#000" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
-    <div id="overlay-msg" class="mono" style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Processing...</div>
-    <div style="display:flex;gap:5px;margin-top:4px;">
-      <div style="width:5px;height:5px;border-radius:50%;background:#ccc;" class="db1"></div>
-      <div style="width:5px;height:5px;border-radius:50%;background:#ccc;" class="db2"></div>
-      <div style="width:5px;height:5px;border-radius:50%;background:#ccc;" class="db3"></div>
+  <div class="agent-panel">
+    <div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:14px;">
+      <div>
+        <div id="overlay-msg" class="mono" style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text);">Agent pipeline</div>
+        <div style="font-size:11px;color:var(--t4);margin-top:4px;">Live trace of the planning system assembling the experiment package.</div>
+      </div>
+      <svg class="spin" width="24" height="24" fill="none" stroke="#000" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
     </div>
+    <div id="agent-trace"></div>
   </div>
 </div>
 
@@ -159,6 +167,18 @@ button{cursor:pointer;font-family:'Space Grotesk',sans-serif;}
     <div class="nav-item" id="nav-experiments" onclick="navTo('audit',3,'protocol','nav-experiments')">
       <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
       Experiment Analysis
+    </div>
+    <div class="nav-item" id="nav-materials" onclick="navTo('audit',3,'materials','nav-materials')" style="padding-left:24px;">
+      <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      Materials
+    </div>
+    <div class="nav-item" id="nav-audit" onclick="navTo('audit',3,'budget','nav-audit')" style="padding-left:24px;">
+      <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7H14a3.5 3.5 0 010 7H6"/></svg>
+      Budget
+    </div>
+    <div class="nav-item" id="nav-timeline" onclick="navTo('audit',3,'timeline','nav-timeline')" style="padding-left:24px;">
+      <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3M3 11h18M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"/></svg>
+      Timeline
     </div>
     <div class="nav-item" id="nav-reviews" onclick="navTo('review',4)">
       <svg width="13" height="13" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -327,6 +347,14 @@ button{cursor:pointer;font-family:'Space Grotesk',sans-serif;}
             </div>
           </div>
 
+          <div class="fu1 card" style="margin-bottom:16px;">
+            <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);">HYPOTHESIS VERIFICATION GRAPH</span>
+              <span style="font-size:9px;color:var(--t4);">green = tested · amber = assumed · grey = out of scope</span>
+            </div>
+            <div id="claim-graph" style="padding:16px;"></div>
+          </div>
+
           <!-- Main 2-col -->
           <div style="display:grid;grid-template-columns:1fr;gap:14px;">
 
@@ -347,13 +375,13 @@ button{cursor:pointer;font-family:'Space Grotesk',sans-serif;}
                     </div>
                   </div>
                   <div id="lit-segs" class="seg-row" style="margin-bottom:12px;"></div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                     <div style="padding:8px;border:1px solid var(--border);border-radius:6px;text-align:center;">
-                      <div class="mono" style="font-size:16px;font-weight:700;">247</div>
+                      <div id="lit-paper-count" class="mono" style="font-size:16px;font-weight:700;">247</div>
                       <div style="font-size:9px;color:var(--t4);margin-top:2px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;">Papers</div>
                     </div>
                     <div style="padding:8px;border:1px solid var(--border);border-radius:6px;text-align:center;">
-                      <div class="mono" style="font-size:16px;font-weight:700;color:var(--red);">3</div>
+                      <div id="lit-high-match" class="mono" style="font-size:16px;font-weight:700;color:var(--red);">3</div>
                       <div style="font-size:9px;color:var(--t4);margin-top:2px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;">High match</div>
                     </div>
                   </div>
@@ -363,7 +391,7 @@ button{cursor:pointer;font-family:'Space Grotesk',sans-serif;}
               <!-- Papers -->
               <div class="fu3 card">
                 <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-                  <span style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);">MATCHED PAPERS</span>
+                  <span style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);">EVIDENCE SPLIT</span>
                   <button style="font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t4);background:none;border:none;">VIEW ALL →</button>
                 </div>
                 <div id="lit-papers" style="padding:10px 12px;display:flex;flex-direction:column;gap:4px;">
@@ -705,9 +733,20 @@ const TIMELINE_PHASES = [
   { phase:'Decision Report', days:'Day 11-21', owner:'PI review', status:'Analysis', detail:'Compare viability delta against the +15 pp threshold and write go/no-go recommendation.' }
 ];
 const LIT_PAPERS = [
-  { title:'Trehalose as an alternative cryoprotectant for mammalian cell cryopreservation', author:'Kim et al.', journal:'Cryobiology, 2019', organism:'Cell', match:92, citations:184, summary:'Trehalose improved post-thaw viability in mammalian cell lines, but the protocol used the same concentration range as this hypothesis.' },
-  { title:'Comparative analysis of cryoprotectants in HeLa cell freezing media', author:'Rossi and Mehta', journal:'Biopreservation & Biobanking, 2021', organism:'Cell', match:78, citations:61, summary:'DMSO and trehalose were compared in HeLa cells; the comparator concentration differs from the proposed experiment.' },
-  { title:'Trehalose enhances post-thaw viability in adherent cancer cell lines', author:'Sato et al.', journal:'J. Cellular Biochemistry, 2018', organism:'Cell', match:65, citations:97, summary:'Supports the membrane-stabilization mechanism but does not test the exact HeLa protocol.' }
+  { title:'Trehalose as an alternative cryoprotectant for mammalian cell cryopreservation', author:'Kim et al.', journal:'Cryobiology, 2019', organism:'Cell', match:92, citations:184, source:'PubMed', stance:'support', summary:'Trehalose improved post-thaw viability in mammalian cell lines, but the protocol used the same concentration range as this hypothesis.' },
+  { title:'Comparative analysis of cryoprotectants in HeLa cell freezing media', author:'Rossi and Mehta', journal:'Biopreservation & Biobanking, 2021', organism:'Cell', match:78, citations:61, source:'Semantic Scholar', stance:'support', summary:'DMSO and trehalose were compared in HeLa cells; the comparator concentration differs from the proposed experiment.' },
+  { title:'Trehalose enhances post-thaw viability in adherent cancer cell lines', author:'Sato et al.', journal:'J. Cellular Biochemistry, 2018', organism:'Cell', match:65, citations:97, source:'PubMed', stance:'support', summary:'Supports the membrane-stabilization mechanism but does not test the exact HeLa protocol.' },
+  { title:'Intracellular trehalose delivery limits cryoprotection in adherent cell lines', author:'Nguyen et al.', journal:'CryoLetters, 2020', organism:'Cell', match:58, citations:42, source:'Semantic Scholar', stance:'contradict', summary:'Reports limited benefit when trehalose is not delivered intracellularly, challenging the mechanism assumed by the hypothesis.' },
+  { title:'DMSO remains superior for rapid HeLa recovery after short-term storage', author:'Patel et al.', journal:'MethodsX, 2017', organism:'Cell', match:51, citations:33, source:'Crossref', stance:'contradict', summary:'Finds DMSO control outperforms sugar-based alternatives under short storage windows, raising a condition-specific risk.' }
+];
+
+const AGENT_TRACE = [
+  { agent:'Input Parser', log:'Extracting intervention, comparator, threshold, organism, and endpoint from hypothesis.' },
+  { agent:'Literature Crawler', log:'Querying PubMed, Semantic Scholar, Crossref, protocols.io, and Bio-protocol.' },
+  { agent:'Novelty Agent', log:'Scoring title closeness, citations, source overlap, and exact-protocol risk.' },
+  { agent:'Claim Verifier', log:'Splitting hypothesis into tested claims, assumptions, and out-of-scope biology.' },
+  { agent:'Protocol Architect', log:'Mapping validated claims to executable protocol sections and controls.' },
+  { agent:'Ops Planner', log:'Resolving materials, budget, supplier options, lead times, and timeline dependencies.' }
 ];
 
 const RESEARCH_HISTORY = [
@@ -755,12 +794,14 @@ function applyTypeScale() {
 function init() {
   applyTypeScale();
   renderStepper();
-  renderSegs('lit-segs', 72, 20);
+  updateLiteratureMetrics();
   renderSegs('audit-segs', auditScore, 20);
   renderSegs('reviewer-segs', 98, 12);
   renderProtoSteps();
   renderMats();
   renderLitPapers();
+  renderLitPapersSplit();
+  renderClaimGraph();
   renderExperimentPlanning();
   renderSummaryPage();
   renderHistory();
@@ -779,6 +820,8 @@ function renderHistory() {
           <span class="mono" style="font-size:8px;color:var(--t4);">${h.id}</span>
           <span style="width:2px;height:2px;border-radius:50%;background:var(--t4);"></span>
           <span style="font-size:8px;color:var(--t4);">${h.date}</span>
+          <span style="width:2px;height:2px;border-radius:50%;background:var(--t4);"></span>
+          <span class="mono" style="font-size:8px;color:var(--t4);">${h.score}/100</span>
         </div>
       </div>
     </div>
@@ -858,6 +901,71 @@ function renderLitPapers() {
 }
 
 // ─── Navigation ──────────────────────────────────────────────────
+function calculateNoveltyScore(text = hypothesis) {
+  const h = (text || '').toLowerCase();
+  let score = 58;
+  if (h.includes('hela')) score += 4;
+  if (h.includes('trehalose')) score += 4;
+  if (h.includes('dmso')) score += 3;
+  if (/\d/.test(h)) score += 5;
+  if (h.includes('whole blood') || h.includes('co2') || h.includes('mouse') || h.includes('mice')) score += 8;
+  return Math.max(42, Math.min(89, score));
+}
+
+function updateLiteratureMetrics() {
+  const score = calculateNoveltyScore();
+  const paperBase = 80 + (hypothesis.length % 170);
+  const highMatches = Math.max(1, LIT_PAPERS.filter(p => p.match > 75).length - (score > 78 ? 1 : 0));
+  const scoreEl = document.getElementById('lit-novelty-score');
+  const paperEl = document.getElementById('lit-paper-count');
+  const highEl = document.getElementById('lit-high-match');
+  if (scoreEl) scoreEl.textContent = score;
+  if (paperEl) paperEl.textContent = paperBase;
+  if (highEl) highEl.textContent = highMatches;
+  renderSegs('lit-segs', score, 20);
+}
+
+function renderClaimGraph() {
+  const el = document.getElementById('claim-graph');
+  if (!el) return;
+  const nodes = [
+    { label:'Trehalose replaces sucrose', state:'tested', note:'Direct intervention arm' },
+    { label:'HeLa post-thaw viability improves', state:'tested', note:'Primary endpoint' },
+    { label:'DMSO comparator is stable', state:'tested', note:'Control condition' },
+    { label:'Membrane stabilization mechanism', state:'assumed', note:'Mechanistic rationale' },
+    { label:'Generalizes to other cell lines', state:'scope', note:'Not tested in this run' }
+  ];
+  const colors = { tested:'var(--green)', assumed:'var(--amber)', scope:'var(--t4)' };
+  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:stretch;">${nodes.map((n,i)=>`
+    <div style="position:relative;padding:12px;border:1px solid ${colors[n.state]};border-radius:8px;background:#fff;min-height:96px;">
+      ${i < nodes.length - 1 ? '<div style="position:absolute;right:-9px;top:38px;width:9px;height:1px;background:var(--border);"></div>' : ''}
+      <div style="width:8px;height:8px;border-radius:50%;background:${colors[n.state]};margin-bottom:9px;"></div>
+      <div style="font-size:11px;font-weight:700;color:var(--text);line-height:1.35;">${n.label}</div>
+      <p style="font-size:9px;color:var(--t3);line-height:1.35;margin-top:6px;">${n.note}</p>
+    </div>`).join('')}</div>`;
+}
+
+function renderLitPapersSplit() {
+  const el = document.getElementById('lit-papers');
+  if (!el) return;
+  const renderGroup = (title, stance, color) => {
+    const papers = LIT_PAPERS.filter(p => p.stance === stance);
+    return `<div><div style="display:flex;align-items:center;justify-content:space-between;margin:3px 0 8px;"><span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${color};">${title}</span><span class="mono" style="font-size:10px;color:var(--t4);">${papers.length}</span></div>${papers.map(p => `
+      <div class="paper-row" style="border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:2px;background:${stance === 'contradict' ? 'rgba(255,35,25,.035)' : 'transparent'};">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+          <div style="flex:1;">
+            <p style="font-size:11px;color:var(--text);line-height:1.45;font-weight:700;">${p.title}</p>
+            <p style="font-size:10px;color:var(--t3);line-height:1.4;margin-top:2px;">${p.author} · ${p.journal} · ${p.citations} citations</p>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;"><span class="source-badge">${p.organism}</span><span class="source-badge">via ${p.source}</span></div>
+            <p style="font-size:10px;color:var(--t2);line-height:1.5;margin-top:6px;">${p.summary}</p>
+          </div>
+          <span class="mono" style="font-size:12px;font-weight:700;color:${p.match > 85 ? 'var(--red)' : p.match > 70 ? 'var(--amber)' : 'var(--t4)'};flex-shrink:0;">${p.match}%</span>
+        </div>
+      </div>`).join('')}</div>`;
+  };
+  el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">${renderGroup('Supporting mechanism', 'support', 'var(--green)')}${renderGroup('Contradicting evidence', 'contradict', 'var(--red)')}</div>`;
+}
+
 function navTo(viewName, step, tab, activeNavOverride) {
   if (viewName === 'plan' && !tab) tab = 'prot';
   if (viewName === 'audit' && !tab) tab = 'protocol';
@@ -892,6 +1000,9 @@ function navTo(viewName, step, tab, activeNavOverride) {
     hypothesis = h;
     document.getElementById('qc-hyp-text').textContent = h;
     document.getElementById('qc-hyp-edit').value = h;
+    updateLiteratureMetrics();
+    renderLitPapersSplit();
+    renderClaimGraph();
   }
 }
 
@@ -899,10 +1010,35 @@ function goTo(viewName, step, msg, delay, tab, activeNavOverride) {
   // Show overlay
   document.getElementById('overlay-msg').textContent = msg;
   document.getElementById('step-overlay').classList.add('show');
+  runAgentTrace(viewName);
   setTimeout(() => {
     document.getElementById('step-overlay').classList.remove('show');
     navTo(viewName, step, tab, activeNavOverride);
   }, delay || 1800);
+}
+
+function runAgentTrace(targetView) {
+  const trace = document.getElementById('agent-trace');
+  if (!trace) return;
+  const rows = targetView === 'qc' ? AGENT_TRACE.slice(0, 4) : AGENT_TRACE;
+  trace.innerHTML = rows.map((a, i) => `<div class="agent-row" id="agent-row-${i}"><div class="agent-dot"></div><div class="mono" style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">${a.agent}</div><div class="agent-log">${a.log}</div><div class="mono" id="agent-count-${i}" style="font-size:10px;color:var(--t4);">${i === 1 ? '0 papers' : 'queued'}</div></div>`).join('');
+  rows.forEach((_, i) => {
+    setTimeout(() => {
+      const row = document.getElementById('agent-row-' + i);
+      const count = document.getElementById('agent-count-' + i);
+      if (!row || !count) return;
+      row.classList.add('active');
+      count.textContent = i === 1 ? '12 papers' : i === 2 ? calculateNoveltyScore() + '% score' : 'running';
+    }, 180 + i * 260);
+    setTimeout(() => {
+      const row = document.getElementById('agent-row-' + i);
+      const count = document.getElementById('agent-count-' + i);
+      if (!row || !count) return;
+      row.classList.remove('active');
+      row.classList.add('done');
+      count.textContent = 'done';
+    }, 410 + i * 260);
+  });
 }
 
 // ─── Input ───────────────────────────────────────────────────────
@@ -1065,11 +1201,24 @@ function planningTotal() {
   return PLAN_MATS.filter(m => m.selected).reduce((sum, m) => sum + m.cost, 0);
 }
 
+function dateForDay(day) {
+  const d = new Date();
+  d.setDate(d.getDate() + day);
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+}
+
+function dateRangeForPhase(days) {
+  const nums = days.match(/\d+/g) || ['0'];
+  const start = Number(nums[0]);
+  const end = Number(nums[1] || nums[0]);
+  return `${dateForDay(start)}-${dateForDay(end)}`;
+}
+
 function ganttSelect(idx) {
   const p = TIMELINE_PHASES[idx];
   const colors = ['#FF8800','#555','#B4B4B0','#000','#333','#B4B4B0'];
   document.getElementById('gantt-detail-phase').textContent = p.phase;
-  document.getElementById('gantt-detail-days').textContent = p.days;
+  document.getElementById('gantt-detail-days').textContent = p.days + ' · ' + dateRangeForPhase(p.days);
   document.getElementById('gantt-detail-owner').textContent = p.owner + ' · ' + p.status;
   document.getElementById('gantt-detail-text').textContent = p.detail;
   document.getElementById('gantt-detail-dot').style.background = colors[idx];
@@ -1125,7 +1274,7 @@ function renderExperimentPlanning() {
                   <svg width="10" height="10" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
                 </div>
                 <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">AI Protocol Assistant</span>
-                <span style="margin-left:auto;font-size:8px;color:var(--t4);font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border:1px solid var(--border);border-radius:3px;">Backend pending</span>
+                <span style="margin-left:auto;font-size:8px;color:var(--green);font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border:1px solid rgba(0,179,65,.25);border-radius:3px;">Live response</span>
               </div>
               <div id="proto-chat-msgs" style="max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:0 16px 8px;"></div>
               <div style="display:flex;gap:8px;padding:8px 16px 12px;">
@@ -1145,6 +1294,8 @@ function renderExperimentPlanning() {
                   <span class="mono" style="font-size:22px;font-weight:700;letter-spacing:-.02em;">21</span>
                   <span style="font-size:10px;font-weight:600;color:var(--t3);">days</span>
                 </div>
+                <div style="width:1px;height:14px;background:var(--border);"></div>
+                <span class="mono" style="font-size:10px;color:var(--t3);">${dateForDay(0)}-${dateForDay(21)}</span>
                 <div style="width:1px;height:14px;background:var(--border);"></div>
                 <span style="font-size:10px;color:var(--t3);">8 bench days</span>
                 <div style="width:1px;height:14px;background:var(--border);"></div>
@@ -1379,7 +1530,7 @@ function renderPlanningMaterials() {
   }).join('');
   if (budgetLines) budgetLines.innerHTML = PLAN_MATS.map((m, idx) => {
     const active = m.selected;
-    return `<div style="display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:start;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:${active ? '#FAFAF8' : '#fff'};opacity:${active ? '1' : '.48'};"><input type="checkbox" ${active ? 'checked' : ''} onchange="toggleMaterial(${idx})" style="margin-top:2px;"><div><div style="font-size:12px;font-weight:700;color:var(--text);">${m.name}</div><div style="font-size:10px;color:var(--t3);margin-top:3px;">${m.vendor} · ${m.qty} · ${m.cat}</div><button onclick="chooseSupplier(${idx})" style="margin-top:6px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--border);border-radius:4px;background:#fff;padding:4px 7px;">CHANGE SUPPLIER</button></div><div class="mono" style="font-size:13px;font-weight:700;text-align:right;">EUR ${m.cost}</div></div>`;
+    return `<div style="display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:start;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:${active ? '#FAFAF8' : '#fff'};opacity:${active ? '1' : '.48'};"><input type="checkbox" ${active ? 'checked' : ''} onchange="toggleMaterial(${idx})" style="margin-top:2px;"><div><div style="font-size:12px;font-weight:700;color:var(--text);">${m.name}</div><div style="font-size:10px;color:var(--t3);margin-top:3px;">${m.vendor} · ${m.qty} · ${m.cat}</div><div style="display:flex;gap:6px;align-items:center;margin-top:6px;"><button onclick="chooseSupplier(${idx})" style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--border);border-radius:4px;background:#fff;padding:4px 7px;">CHANGE SUPPLIER</button><span class="source-badge">supplier URL</span></div></div><div class="mono" style="font-size:13px;font-weight:700;text-align:right;">EUR ${m.cost}</div></div>`;
   }).join('');
   const total = planningTotal().toLocaleString();
   const totalEl = document.getElementById('budget-total');
@@ -1404,7 +1555,8 @@ function switchPlanningTab(name, btn) {
     if (tabs[order[name]]) tabs[order[name]].classList.add('active');
   }
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('nav-experiments').classList.add('active');
+  const navId = name === 'materials' ? 'nav-materials' : name === 'budget' ? 'nav-audit' : name === 'timeline' ? 'nav-timeline' : 'nav-experiments';
+  document.getElementById(navId).classList.add('active');
 }
 
 function toggleMaterial(idx) {
@@ -1434,6 +1586,7 @@ function renderPlanningProtocolList() {
       <div class="mono" style="width:20px;height:20px;border:1.5px solid #000;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:2px;">${i + 1}</div>
       <div id="pplan-content-${i}" style="flex:1;min-width:0;">
         <p style="font-size:12px;color:var(--t2);line-height:1.6;margin:0;">${step}</p>
+        <div style="margin-top:6px;"><span class="source-badge">${i < 2 ? 'via Bio-protocol' : i < 4 ? 'via protocols.io' : 'via PubMed'}</span></div>
       </div>
       <button id="pplan-edit-btn-${i}" onclick="editPlanStep(${i})" title="Edit step" style="flex-shrink:0;width:24px;height:24px;border:1px solid var(--border);border-radius:4px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t4);transition:all .12s;margin-top:1px;" onmouseover="this.style.borderColor='#000';this.style.color='#000'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--t4)'">
         <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1494,6 +1647,26 @@ function sendProtoChat() {
   }, 900);
 }
 
+function sendProtoChat() {
+  const input = document.getElementById('proto-chat-input');
+  if (!input) return;
+  const val = input.value.trim();
+  if (!val) return;
+  input.value = '';
+  protoChatHistory.push({ role: 'user', text: val });
+  renderProtoChat();
+  setTimeout(() => {
+    const lower = val.toLowerCase();
+    let response = 'I would update the protocol by adding a short decision note, then preserve the current controls so the comparison remains interpretable.';
+    if (lower.includes('replicate') || lower.includes('power') || lower.includes('n=')) response = 'Increase biological replicates to n=6 per condition. That improves power for a 15 percentage point viability delta and adds about two bench days.';
+    if (lower.includes('control')) response = 'Add untreated culture, DMSO standard, and a thaw-only handling control. Keep them in the same freeze/thaw batch to avoid batch effects.';
+    if (lower.includes('safety') || lower.includes('ln2')) response = 'Add LN2 handling PPE, cryogenic label checks, and a post-thaw wash note before viability readout.';
+    if (lower.includes('budget') || lower.includes('cheap')) response = 'Use the existing core-facility freezer slot and mark owned consumables as in-lab. The Budget tab will remove those costs from purchasing.';
+    protoChatHistory.push({ role: 'ai', text: response });
+    renderProtoChat();
+  }, 450);
+}
+
 function renderProtoChat() {
   const msgs = document.getElementById('proto-chat-msgs');
   if (!msgs) return;
@@ -1542,6 +1715,27 @@ function renderSummaryPage() {
               <div style="display:flex;justify-content:space-between;gap:10px;"><span style="font-size:12px;color:var(--t3);">Budget</span><b class="mono" style="font-size:12px;">EUR ${planningTotal().toLocaleString()}</b></div>
               <div style="display:flex;justify-content:space-between;gap:10px;"><span style="font-size:12px;color:var(--t3);">Timeline</span><b style="font-size:12px;">3 weeks</b></div>
               <div style="display:flex;justify-content:space-between;gap:10px;"><span style="font-size:12px;color:var(--t3);">Validation</span><b style="font-size:12px;">Trypan Blue + Alamar Blue</b></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;border-left:3px solid var(--amber);">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);">Synthesis Conflict List</span>
+            <span class="mono" style="font-size:10px;color:var(--amber);font-weight:700;">3 open</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;">
+            <div style="padding:14px 16px;border-right:1px solid var(--border);">
+              <div style="font-size:11px;font-weight:700;color:var(--text);line-height:1.45;">Timeline assumes freezer slot on Day 5.</div>
+              <p style="font-size:10px;color:var(--t3);line-height:1.5;margin-top:5px;">Equipment plan marks the core facility as available but does not reserve a booking ID.</p>
+            </div>
+            <div style="padding:14px 16px;border-right:1px solid var(--border);">
+              <div style="font-size:11px;font-weight:700;color:var(--text);line-height:1.45;">Budget excludes personnel estimate.</div>
+              <p style="font-size:10px;color:var(--t3);line-height:1.5;margin-top:5px;">Purchasing subtotal is complete, but PI-facing total should include labor before approval.</p>
+            </div>
+            <div style="padding:14px 16px;">
+              <div style="font-size:11px;font-weight:700;color:var(--text);line-height:1.45;">Mechanism is assumed, not directly tested.</div>
+              <p style="font-size:10px;color:var(--t3);line-height:1.5;margin-top:5px;">The verification graph flags membrane stabilization as rationale rather than measured output.</p>
             </div>
           </div>
         </div>
